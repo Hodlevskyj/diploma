@@ -32,4 +32,14 @@ export class AuthController {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+
+  @Post('login')
+  async login(@Body() body: { email: string; password: string }) {
+    const { email, password } = body;
+    try {
+      return await this.authService.login(email, password);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
 }
