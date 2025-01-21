@@ -3,10 +3,11 @@
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
-export default function VerifyForm() {
+export default function LoginForm() {
 	const router = useRouter()
 	const [formData, setFormData] = useState({
-		otp: '',
+		email: '',
+		password: '',
 	})
 	const [error, setError] = useState('')
 
@@ -19,33 +20,41 @@ export default function VerifyForm() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		try {
-			const email = localStorage.getItem('email')
-			if (!email) throw new Error('Email not found')
-
-			const res = await fetch(`${apiUrl}/auth/verify`, {
+			const res = await fetch(`${apiUrl}/auth/login`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ email, code: formData.otp }),
+				body: JSON.stringify(formData),
 			})
-			console.log(res)
 
-			if (!res.ok) throw new Error('Failed to verify OTP')
-			router.push('/success')
-		} catch (err) {
-			setError('Error verifying OTP.')
+			if (!res.ok) {
+				const errorData = await res.json()
+				throw new Error(errorData.message || 'Failed to login')
+			}
+
+			const data = await res.json()
+			localStorage.setItem('token', data.token)
+			router.push('/dashboard')
+		} catch (err: any) {
+			setError(err.message || 'Error logging in.')
 		}
 	}
 
 	return (
 		<form onSubmit={handleSubmit}>
 			<input
-				type='text'
-				name='otp'
-				placeholder='Enter OTP'
+				type='email'
+				name='email'
+				placeholder='Email'
+				onChange={handleChange}
+			/>
+			<input
+				type='password'
+				name='password'
+				placeholder='Password'
 				onChange={handleChange}
 			/>
 			{error && <p className='error'>{error}</p>}
-			<button type='submit'>Verify</button>
+			<button type='submit'>Login</button>
 		</form>
 	)
 }
