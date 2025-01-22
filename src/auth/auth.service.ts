@@ -95,4 +95,53 @@ export class AuthService {
 
     return { token, message: 'Login successful' };
   }
+
+  async forgotPassword(email: string) {}
+
+  async resetPassword(email: string, password: string) {}
+
+  async changePassword(
+    userId: number,
+    oldPassword: string,
+    newPassword: string,
+  ) {}
+
+  async googleLogin(req) {
+    if (!req.user) {
+      return 'No user from google';
+    }
+    const { email, firstName, lastName } = req.user.user;
+
+    if (!email || !firstName || !lastName) {
+      throw new Error('Invalid user data from Google');
+    }
+
+    let user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          name: `${firstName} ${lastName}`,
+          password: '',
+          isVerified: true,
+        },
+      });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '1h',
+      },
+    );
+    return {
+      message: 'Login successful',
+      user,
+      token,
+    };
+  }
 }
