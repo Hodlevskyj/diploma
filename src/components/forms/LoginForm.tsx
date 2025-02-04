@@ -1,10 +1,12 @@
 'use client'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-export default function LoginForm() {
+const LoginForm = () => {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+	const router = useRouter()
 
 	const handleLogin = async () => {
 		try {
@@ -15,12 +17,18 @@ export default function LoginForm() {
 				},
 				body: JSON.stringify({ email, password }),
 			})
+
 			const data = await response.json()
-			if (data.token) {
-				localStorage.setItem('token', data.token)
+			console.log('Login Response:', data)
+
+			const token = data.token || data.result?.token
+
+			if (response.ok && typeof token === 'string') {
+				localStorage.setItem('token', token)
 				alert('Login successful')
+				router.push('/dashboard')
 			} else {
-				alert('Login failed')
+				alert(`Login failed: ${data.message || 'Invalid credentials'}`)
 			}
 		} catch (error) {
 			console.error('Login error:', error)
@@ -47,3 +55,5 @@ export default function LoginForm() {
 		</div>
 	)
 }
+
+export default LoginForm
