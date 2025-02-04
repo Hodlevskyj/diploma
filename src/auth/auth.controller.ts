@@ -6,9 +6,12 @@ import {
   HttpStatus,
   Post,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../types/express';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -53,7 +56,32 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Req() req) {
-    return this.authService.googleLogin(req);
+  async googleAuthRedirect(@Req() req, @Res() res: Response) {
+    try {
+      const result = await this.authService.googleLogin(req);
+      if (typeof result === 'string') {
+        return res.redirect(`http://localhost:3000/error?message=${result}`);
+      }
+      console.log('Generated token:', result.token);
+      return res.redirect(
+        `http://localhost:3000/dashboard?token=${result.token}`,
+      );
+    } catch (error) {
+      return res.redirect(
+        `http://localhost:3000/error?message=${error.message}`,
+      );
+    }
+  }
+
+  @Get('profile')
+  @UseGuards(AuthGuard('jwt'))
+  async profile(@Req() req: AuthenticatedRequest) {
+    return this.authService.getProfile(req.user.userId);
+  }
+
+  @Get('current-user')
+  @UseGuards(AuthGuard('jwt'))
+  async getCurrentUser(@Req() req: AuthenticatedRequest) {
+    return { email: req.user.email };
   }
 }

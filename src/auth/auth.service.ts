@@ -4,6 +4,11 @@ import * as jwt from 'jsonwebtoken';
 import * as nodemailer from 'nodemailer';
 import { PrismaService } from '../prisma.service';
 
+interface GoogleLoginResult {
+  token: string;
+  message: string;
+}
+
 @Injectable()
 export class AuthService {
   private transporter: nodemailer.Transporter;
@@ -85,15 +90,7 @@ export class AuthService {
       throw new Error('Invalid password.');
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: '1h',
-      },
-    );
-
-    return { token, message: 'Login successful' };
+    return this.generateToken(user);
   }
 
   async forgotPassword(email: string) {}
@@ -106,7 +103,7 @@ export class AuthService {
     newPassword: string,
   ) {}
 
-  async googleLogin(req) {
+  async googleLogin(req): Promise<GoogleLoginResult | string> {
     if (!req.user) {
       return 'No user from google';
     }
@@ -130,18 +127,27 @@ export class AuthService {
         },
       });
     }
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: '1h',
-      },
-    );
     return {
       message: 'Login successful',
-      user,
-      token,
+      token: this.generateToken(user),
     };
+  }
+
+  async getProfile(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+  }
+
+  private generateToken(user) {
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' },
+    );
+    return token;
   }
 }
