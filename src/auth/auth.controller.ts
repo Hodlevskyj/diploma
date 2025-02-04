@@ -21,10 +21,15 @@ export class AuthController {
   @Post('register')
   async register(
     @Body() body: { name: string; email: string; password: string },
+    @Res() res: Response,
   ) {
-    const { name, email, password } = body;
     try {
-      return await this.authService.register(name, email, password);
+      const result = await this.authService.register(
+        body.name,
+        body.email,
+        body.password,
+      );
+      return res.json(result);
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
@@ -41,11 +46,16 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() body: { email: string; password: string }) {
+  async login(
+    @Body() body: { email: string; password: string },
+    @Res() res: Response,
+  ) {
     const { email, password } = body;
     try {
-      return await this.authService.login(email, password);
+      const token = await this.authService.login(email, password);
+      return res.json({ token });
     } catch (error) {
+      console.log('Login error:', error);
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
