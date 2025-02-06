@@ -29,8 +29,16 @@ export default function VerifyForm() {
 			})
 			console.log(res)
 
-			if (!res.ok) throw new Error('Failed to verify OTP')
-			router.push('/success')
+			// if (!res.ok) throw new Error('Failed to verify OTP')
+			// router.push('/success')
+			const data = await res.json()
+			if (res.ok) {
+				localStorage.setItem('token', data.token) // Зберігаємо токен у localStorage
+				alert('Verification successful')
+				router.push('/success') // Перенаправлення на сторінку успіху
+			} else {
+				setError(data.message || 'Verification failed')
+			}
 		} catch (err) {
 			setError('Error verifying OTP.')
 		}

@@ -41,16 +41,29 @@ const Dashboard = () => {
 		router.push('/login')
 	}
 
+	const handleBackToLogin = () => {
+		router.push('/login')
+	}
+
+	const handleProfile = () => {
+		router.push('/profile')
+	}
+
 	return (
 		<div>
 			<h1>Dashboard</h1>
 			{email ? (
 				<>
 					<p>Logged in as: {email}</p>
+					<button onClick={handleProfile}>Profile</button>
+					<br />
 					<button onClick={handleLogout}>Logout</button>
 				</>
 			) : (
-				<p>Not logged in</p>
+				<>
+					<p>Not logged in</p>
+					<button onClick={handleBackToLogin}>Back to login</button>
+				</>
 			)}
 		</div>
 	)

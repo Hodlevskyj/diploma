@@ -2,9 +2,11 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import useAuthRedirect from '../../hooks/useAuthRedirect'
 
 export default function RegisterForm() {
 	const router = useRouter()
+	useAuthRedirect()
 	const [formData, setFormData] = useState({
 		name: '',
 		email: '',

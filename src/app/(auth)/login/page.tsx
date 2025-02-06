@@ -1,5 +1,4 @@
 'use client'
-import withoutAuth from '@/components/auth/withoutAuth'
 import GoogleLoginButton from '@/components/button/GoogleLoginButton'
 import LoginForm from '@/components/forms/LoginForm'
 
@@ -17,4 +16,4 @@ const LoginPage = () => {
 	)
 }
 
-export default withoutAuth(LoginPage)
+export default LoginPage

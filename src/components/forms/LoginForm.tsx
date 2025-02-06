@@ -1,12 +1,14 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import useAuthRedirect from '../../hooks/useAuthRedirect'
 
 const LoginForm = () => {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 	const router = useRouter()
+	useAuthRedirect()
 
 	const handleLogin = async () => {
 		try {
