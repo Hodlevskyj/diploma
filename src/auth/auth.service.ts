@@ -30,31 +30,40 @@ export class AuthService {
       throw new Error('User already exists');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 0);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000,
+    ).toString();
 
-    await this.prisma.user.create({
+    console.log('Verification code:', verificationCode);
+
+    const user = await this.prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
         isVerified: false,
-        verificationCode: otp,
+        verificationCode,
       },
     });
+
+    console.log('User created:', user);
 
     const mailOptions = {
       from: process.env.USER,
       to: email,
       subject: 'Email Verification',
-      text: `Your verification code is ${otp}`,
+      text: `Your verification code is ${verificationCode}`,
     };
 
     try {
       await this.transporter.sendMail(mailOptions);
       console.log('OTP sent successfully via email');
-      return { message: 'Registration successful. Please verify your email.' };
+      return {
+        token: this.generateToken(user),
+        message: 'Registration successful. Please verify your email.',
+      };
     } catch (error) {
       console.error(`Failed to send OTP via email: ${error.message}`);
       throw new Error('Failed to send OTP via email');
@@ -65,6 +74,9 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
+
+    console.log('Stored verificationCode:', user.verificationCode);
+    console.log('Received code:', code);
 
     if (!user || user.verificationCode !== code) {
       throw new Error('Invalid verification code.');
@@ -136,6 +148,11 @@ export class AuthService {
   async getProfile(userId: number) {
     return this.prisma.user.findUnique({
       where: { id: userId },
+      select: {
+        name: true,
+        email: true,
+        role: true,
+      },
     });
   }
 
