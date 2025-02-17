@@ -167,4 +167,14 @@ export class AuthService {
     );
     return token;
   }
+
+  async updateProfile(userId: number, data: { name?: string }) {
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: data.name,
+      },
+    });
+    return updatedUser;
+  }
 }

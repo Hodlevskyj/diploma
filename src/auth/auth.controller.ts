@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   Post,
+  Put,
   Req,
   Res,
   UseGuards,
@@ -13,7 +14,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../types/express';
-import { RegisterDto } from './auth.dto';
+import { RegisterDto, UpdateProfileDto } from './auth.dto';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -95,5 +96,23 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   async getCurrentUser(@Req() req: AuthenticatedRequest) {
     return { email: req.user.email };
+  }
+
+  @Put('update-profile')
+  @UseGuards(AuthGuard('jwt'))
+  async updateProfile(
+    @Body(new ValidationPipe()) body: UpdateProfileDto,
+    @Req() req: AuthenticatedRequest,
+    @Res() res: Response,
+  ) {
+    try {
+      const result = await this.authService.updateProfile(
+        req.user.userId,
+        body,
+      );
+      return res.json(result);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 }
