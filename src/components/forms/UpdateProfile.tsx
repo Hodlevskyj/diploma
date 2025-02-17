@@ -37,7 +37,7 @@ const UpdateProfile = () => {
 			const data = await res.json()
 			if (res.ok) {
 				setSuccess('Profile updated successfully')
-				router.push('/user')
+				router.push('/profile')
 			} else {
 				setError(data.message || 'Profile update failed')
 			}
