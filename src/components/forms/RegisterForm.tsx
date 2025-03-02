@@ -6,6 +6,7 @@ import { useState } from 'react'
 
 export default function RegisterForm() {
 	const router = useRouter()
+	useAuthRedirect()
 	const [formData, setFormData] = useState({
 		name: '',
 		email: '',

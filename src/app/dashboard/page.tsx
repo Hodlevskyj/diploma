@@ -37,6 +37,14 @@ export default function DashboardPage() {
 		return <div>Loading...</div>
 	}
 
+	const handleBackToLogin = () => {
+		router.push('/login')
+	}
+
+	const handleProfile = () => {
+		router.push('/profile')
+	}
+
 	return (
 		<div className='min-h-screen bg-gray-100'>
 			<nav className='bg-white shadow'>

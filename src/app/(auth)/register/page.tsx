@@ -1,5 +1,4 @@
 'use client'
-import withoutAuth from '@/components/auth/withoutAuth'
 import RegisterForm from '@/components/forms/RegisterForm'
 
 const RegisterPage = () => {
@@ -15,4 +14,4 @@ const RegisterPage = () => {
 		</>
 	)
 }
-export default withoutAuth(RegisterPage)
+export default RegisterPage
