@@ -5,8 +5,10 @@ import {
   HttpException,
   HttpStatus,
   Post,
+  Query,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -35,11 +37,10 @@ export class AuthController {
     }
   }
 
-  @Post('verify')
-  async verify(@Body() body: { email: string; code: string }) {
-    const { email, code } = body;
+  @Get('verify-email')
+  async verifyEmail(@Query('token') token: string) {
     try {
-      return await this.authService.verifyCode(email, code);
+      return await this.authService.verifyEmailToken(token);
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
@@ -50,12 +51,10 @@ export class AuthController {
     @Body() body: { email: string; password: string },
     @Res() res: Response,
   ) {
-    const { email, password } = body;
     try {
-      const token = await this.authService.login(email, password);
-      return res.json({ token });
+      await this.authService.login(body.email, body.password, res);
+      return res.json({ message: 'Login successful' });
     } catch (error) {
-      console.log('Login error:', error);
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -68,17 +67,13 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
     try {
-      const result = await this.authService.googleLogin(req);
-      if (typeof result === 'string') {
-        return res.redirect(`http://localhost:3000/error?message=${result}`);
-      }
-      console.log('Generated token:', result.token);
-      return res.redirect(
-        `http://localhost:3000/dashboard?token=${result.token}`,
-      );
+      const result = await this.authService.googleLogin(req, res);
+      setTimeout(() => {
+        res.redirect('http://localhost:3000/dashboard');
+      }, 1000);
     } catch (error) {
       return res.redirect(
-        `http://localhost:3000/error?message=${error.message}`,
+        `http://localhost:3000/error?message=${encodeURIComponent(error.message)}`,
       );
     }
   }
@@ -93,5 +88,38 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   async getCurrentUser(@Req() req: AuthenticatedRequest) {
     return { email: req.user.email };
+  }
+  @Post('logout')
+  async logout(@Res() res: Response) {
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'localhost',
+      // sameSite: 'strict',
+      sameSite: 'lax',
+    });
+
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'localhost',
+      // sameSite: 'strict',
+      sameSite: 'lax',
+      // path: '/auth/refresh',
+    });
+
+    return res.json({ message: 'Logout successful' });
+  }
+
+  @Get('session')
+  async getSession(@Req() req) {
+    const token = req.cookies['access_token'];
+    if (!token) {
+      return { message: 'No session found' };
+    }
+    try {
+      const user = this.authService.verifyToken(token);
+      return { user };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 }
