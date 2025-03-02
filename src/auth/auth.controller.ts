@@ -10,10 +10,12 @@ import {
   Res,
   UnauthorizedException,
   UseGuards,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../types/express';
+import { RegisterDto } from './auth.dto';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -22,7 +24,7 @@ export class AuthController {
 
   @Post('register')
   async register(
-    @Body() body: { name: string; email: string; password: string },
+    @Body(new ValidationPipe()) body: RegisterDto,
     @Res() res: Response,
   ) {
     try {

@@ -240,6 +240,11 @@ export class AuthService {
   async getProfile(userId: number) {
     return this.prisma.user.findUnique({
       where: { id: userId },
+      select: {
+        name: true,
+        email: true,
+        role: true,
+      },
     });
   }
 
@@ -249,5 +254,15 @@ export class AuthService {
     } catch (error) {
       throw new UnauthorizedException('Invalid token');
     }
+  }
+
+  async updateProfile(userId: number, data: { name?: string }) {
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: data.name,
+      },
+    });
+    return updatedUser;
   }
 }
