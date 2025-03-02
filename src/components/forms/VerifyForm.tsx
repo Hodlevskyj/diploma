@@ -1,51 +1,91 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
-export default function VerifyForm() {
+export default function VerifyEmailPage() {
 	const router = useRouter()
-	const [formData, setFormData] = useState({
-		otp: '',
-	})
-	const [error, setError] = useState('')
+	const searchParams = useSearchParams()
+	const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
+		'loading'
+	)
+	const [message, setMessage] = useState('')
 
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setFormData({ ...formData, [e.target.name]: e.target.value })
-	}
+	useEffect(() => {
+		const verifyEmail = async () => {
+			const token = searchParams.get('token')
 
-	const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'
+			if (!token) {
+				setStatus('error')
+				setMessage('Invalid verification link')
+				return
+			}
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault()
-		try {
-			const email = localStorage.getItem('email')
-			if (!email) throw new Error('Email not found')
+			try {
+				const response = await fetch(
+					`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/verify-email?token=${token}`,
+					{
+						method: 'GET',
+						credentials: 'include',
+					}
+				)
 
-			const res = await fetch(`${apiUrl}/auth/verify`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ email, code: formData.otp }),
-			})
-			console.log(res)
+				const data = await response.json()
 
-			if (!res.ok) throw new Error('Failed to verify OTP')
-			router.push('/success')
-		} catch (err) {
-			setError('Error verifying OTP.')
+				if (!response.ok) {
+					throw new Error(data.message)
+				}
+
+				setStatus('success')
+				setMessage('Email verified successfully!')
+
+				setTimeout(() => {
+					router.push('/dashboard')
+				}, 3000)
+			} catch (error) {
+				setStatus('error')
+				setMessage(
+					error instanceof Error ? error.message : 'Verification failed'
+				)
+			}
 		}
-	}
+
+		verifyEmail()
+	}, [router, searchParams])
 
 	return (
-		<form onSubmit={handleSubmit}>
-			<input
-				type='text'
-				name='otp'
-				placeholder='Enter OTP'
-				onChange={handleChange}
-			/>
-			{error && <p className='error'>{error}</p>}
-			<button type='submit'>Verify</button>
-		</form>
+		<div className='min-h-screen flex items-center justify-center bg-gray-50'>
+			<div className='max-w-md w-full p-6 bg-white rounded-lg shadow-lg'>
+				{status === 'loading' && (
+					<div className='text-center'>
+						<div className='animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto'></div>
+						<p className='mt-4 text-gray-600'>Verifying your email...</p>
+					</div>
+				)}
+
+				{status === 'success' && (
+					<div className='text-center'>
+						<div className='text-green-500 text-5xl mb-4'>✓</div>
+						<h2 className='text-2xl font-bold text-gray-900 mb-2'>
+							Email Verified!
+						</h2>
+						<p className='text-gray-600'>{message}</p>
+						<p className='text-sm text-gray-500 mt-4'>
+							Redirecting to dashboard...
+						</p>
+					</div>
+				)}
+
+				{status === 'error' && (
+					<div className='text-center'>
+						<div className='text-red-500 text-5xl mb-4'>✕</div>
+						<h2 className='text-2xl font-bold text-gray-900 mb-2'>
+							Verification Failed
+						</h2>
+						<p className='text-red-600'>{message}</p>
+					</div>
+				)}
+			</div>
+		</div>
 	)
 }

@@ -1,69 +1,96 @@
 'use client'
 
-import { createContext, useEffect, useState } from 'react'
-
-interface AuthContextType {
-	user: any
-	login: (email: string, password: string) => Promise<void>
-	googleLogin: (googleData: any) => Promise<void>
-	logout: () => void
+import { useRouter } from 'next/navigation'
+import { createContext, useContext, useEffect, useState } from 'react'
+interface User {
+	id: number
+	email: string
+	name: string
 }
 
-export const AuthContext = createContext<AuthContextType>({
-	user: null,
-	login: async () => {},
-	googleLogin: async () => {},
-	logout: () => {},
-})
+interface AuthContextType {
+	user: User | null
+	loading: boolean
+	login: (email: string, password: string) => Promise<void>
+	logout: () => Promise<void>
+}
 
-export const AuthProvider = ({ children }: any) => {
-	const [user, setUser] = useState(null)
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+	const [user, setUser] = useState<User | null>(null)
+	const [loading, setLoading] = useState(true)
+	const router = useRouter()
 
 	useEffect(() => {
-		const storedUser = localStorage.getItem('user')
-		if (storedUser) setUser(JSON.parse(storedUser))
+		checkAuth()
 	}, [])
 
+	const checkAuth = async () => {
+		try {
+			const response = await fetch(
+				`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/current-user`,
+				{
+					credentials: 'include',
+					headers: {
+						'Cache-Control': 'no-cache',
+						Pragma: 'no-cache',
+					},
+				}
+			)
+
+			if (response.ok) {
+				const userData = await response.json()
+				setUser(userData)
+			} else {
+				setUser(null)
+			}
+		} catch (error) {
+			console.error('Auth check failed:', error)
+			setUser(null)
+		} finally {
+			setLoading(false)
+		}
+	}
+
 	const login = async (email: string, password: string) => {
-		const res = await fetch(
-			`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`,
+		const response = await fetch(
+			`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`,
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
 				body: JSON.stringify({ email, password }),
 			}
 		)
 
-		if (!res.ok) throw new Error('Invalid credentials')
-		const data = await res.json()
-		localStorage.setItem('user', JSON.stringify(data))
-		setUser(data)
+		if (!response.ok) {
+			throw new Error('Login failed')
+		}
+
+		await checkAuth()
 	}
 
-	const googleLogin = async (googleData: any) => {
-		const res = await fetch(
-			`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google`,
-			{
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(googleData),
-			}
-		)
-
-		if (!res.ok) throw new Error('Google login failed')
-		const data = await res.json()
-		localStorage.setItem('user', JSON.stringify(data))
-		setUser(data)
-	}
-
-	const logout = () => {
-		localStorage.removeItem('user')
+	const logout = async () => {
+		await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
+			method: 'POST',
+			credentials: 'include',
+		})
 		setUser(null)
+		router.push('/login')
 	}
 
 	return (
-		<AuthContext.Provider value={{ user, login, googleLogin, logout }}>
+		<AuthContext.Provider value={{ user, loading, login, logout }}>
 			{children}
 		</AuthContext.Provider>
 	)
+}
+
+export const useAuth = () => {
+	const context = useContext(AuthContext)
+	if (context === undefined) {
+		throw new Error('useAuth must be used within an AuthProvider')
+	}
+	return context
 }

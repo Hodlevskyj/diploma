@@ -1,59 +1,74 @@
 'use client'
+
+import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-const Dashboard = () => {
-	const [email, setEmail] = useState('')
-	const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+export default function DashboardPage() {
+	// const { user, loading, logout } = useAuth()
+	const { user, logout } = useAuth()
+	const [loading, setLoading] = useState(true)
 	const router = useRouter()
 
 	useEffect(() => {
-		const urlParams = new URLSearchParams(window.location.search)
-		const token = urlParams.get('token')
-		if (token) {
-			localStorage.setItem('token', token)
-			router.replace('/dashboard')
+		const checkAuth = async () => {
+			try {
+				const response = await fetch(
+					`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/session`,
+					{
+						credentials: 'include',
+					}
+				)
+
+				if (!response.ok) {
+					throw new Error('Not authenticated')
+				}
+
+				setLoading(false)
+			} catch (error) {
+				router.push('/login')
+			}
 		}
+
+		checkAuth()
 	}, [router])
 
-	useEffect(() => {
-		const storedToken = localStorage.getItem('token')
-		if (storedToken) {
-			fetch(`${API_BASE_URL}/auth/current-user`, {
-				headers: {
-					Authorization: `Bearer ${storedToken}`,
-				},
-			})
-				.then(res => res.json())
-				.then(data => {
-					if (data.email) {
-						setEmail(data.email)
-					}
-				})
-				.catch(() => {
-					setEmail('')
-				})
-		}
-	}, [API_BASE_URL])
-
-	const handleLogout = () => {
-		localStorage.removeItem('token')
-		router.push('/login')
+	if (loading) {
+		return <div>Loading...</div>
 	}
 
 	return (
-		<div>
-			<h1>Dashboard</h1>
-			{email ? (
-				<>
-					<p>Logged in as: {email}</p>
-					<button onClick={handleLogout}>Logout</button>
-				</>
-			) : (
-				<p>Not logged in</p>
-			)}
+		<div className='min-h-screen bg-gray-100'>
+			<nav className='bg-white shadow'>
+				<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+					<div className='flex justify-between h-16'>
+						<div className='flex items-center'>
+							<h1 className='text-xl font-bold'>Dashboard</h1>
+						</div>
+						<div className='flex items-center'>
+							<button
+								onClick={() => logout()}
+								className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600'
+							>
+								Logout
+							</button>
+						</div>
+					</div>
+				</div>
+			</nav>
+
+			<main className='max-w-7xl mx-auto py-6 sm:px-6 lg:px-8'>
+				<div className='px-4 py-6 sm:px-0'>
+					<div className='border-4 border-dashed border-gray-200 rounded-lg p-4'>
+						{user && (
+							<>
+								<h2 className='text-lg font-semibold'>Welcome, {user.name}!</h2>
+								<p className='mt-2'>Email: {user.email}</p>
+							</>
+						)}
+					</div>
+				</div>
+			</main>
 		</div>
 	)
 }
-
-export default Dashboard
