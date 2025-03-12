@@ -6,6 +6,7 @@ import * as crypto from 'crypto';
 import { Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import * as nodemailer from 'nodemailer';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PrismaService } from '../prisma.service';
 
 // interface GoogleLoginResult {
@@ -50,6 +51,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configureService: ConfigService,
+    private cloudinaryService: CloudinaryService,
   ) {
     this.transporter = nodemailer.createTransport({
       service: 'Gmail',
@@ -74,7 +76,7 @@ export class AuthService {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 60 * 60 * 1000, // 60 minutes
     });
 
     res.cookie('refresh_token', tokens.refresh_token, {
@@ -244,6 +246,8 @@ export class AuthService {
         name: true,
         email: true,
         role: true,
+        picture: true,
+        createdAt: true,
       },
     });
   }
@@ -256,13 +260,15 @@ export class AuthService {
     }
   }
 
-  async updateProfile(userId: number, data: { name?: string }) {
-    const updatedUser = await this.prisma.user.update({
+  async updateProfile(userId: number, name: string, pictureUrl?: string) {
+    console.log('Updating user in database:', { userId, name, pictureUrl });
+
+    return this.prisma.user.update({
       where: { id: userId },
       data: {
-        name: data.name,
+        name,
+        ...(pictureUrl && { picture: pictureUrl }),
       },
     });
-    return updatedUser;
   }
 }

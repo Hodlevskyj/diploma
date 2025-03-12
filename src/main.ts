@@ -1,21 +1,7 @@
-// import { NestFactory } from '@nestjs/core';
-// import { AppModule } from './app.module';
-
-// async function bootstrap() {
-//   const app = await NestFactory.create(AppModule);
-
-//   app.enableCors({
-//     origin: 'http://localhost:3000', //дозволити frontend
-//     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', //дозволені методи
-//     credentials: true, //дозволити cookies
-//   });
-
-//   await app.listen(4000); // backend працює на порту 4000
-// }
-// bootstrap();
-
 import { NestFactory } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
+import * as express from 'express';
+import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -25,6 +11,8 @@ async function bootstrap() {
     origin: 'http://localhost:3000',
     credentials: true,
   });
+  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
+  // app.use(multer().single('file'));
   await app.listen(4000);
 }
 bootstrap();

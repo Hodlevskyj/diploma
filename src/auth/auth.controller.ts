@@ -5,22 +5,30 @@ import {
   HttpException,
   HttpStatus,
   Post,
+  Put,
   Query,
   Req,
   Res,
   UnauthorizedException,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { AuthenticatedRequest } from '../types/express';
 import { RegisterDto } from './auth.dto';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Post('register')
   async register(
@@ -83,7 +91,13 @@ export class AuthController {
   @Get('profile')
   @UseGuards(AuthGuard('jwt'))
   async profile(@Req() req: AuthenticatedRequest) {
-    return this.authService.getProfile(req.user.userId);
+    const user = await this.authService.getProfile(req.user.userId);
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    return user;
   }
 
   @Get('current-user')
@@ -123,5 +137,33 @@ export class AuthController {
     } catch (error) {
       throw new UnauthorizedException('Invalid token');
     }
+  }
+
+  @Put('update-profile')
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(FileInterceptor('picture'))
+  async updateProfile(
+    @Req() req,
+    @Body() body: { name: string },
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    console.log('Received update request:', {
+      userId: req.user.userId,
+      name: body.name,
+      file,
+    });
+
+    let pictureUrl = undefined;
+
+    if (file) {
+      const uploadResult = await this.cloudinaryService.uploadImage(file);
+      pictureUrl = uploadResult.secure_url;
+    }
+
+    return this.authService.updateProfile(
+      req.user.userId,
+      body.name,
+      pictureUrl,
+    );
   }
 }
