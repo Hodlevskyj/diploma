@@ -35,3 +35,27 @@ export const fetchCurrentUser = async () => {
 		return null
 	}
 }
+
+export async function updateProfile(name: string, file?: File) {
+	const formData = new FormData()
+	formData.append('name', name)
+	if (file) {
+		formData.append('picture', file)
+	}
+
+	const response = await fetch(
+		`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/update-profile`,
+		{
+			method: 'PUT',
+			credentials: 'include',
+			body: formData,
+		}
+	)
+
+	if (!response.ok) {
+		const error = await response.json()
+		throw new Error(error.message || 'Failed to update profile')
+	}
+
+	return response.json()
+}
