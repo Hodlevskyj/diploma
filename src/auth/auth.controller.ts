@@ -166,4 +166,28 @@ export class AuthController {
       pictureUrl,
     );
   }
+
+  @Put('update-fitness-data')
+  @UseGuards(AuthGuard('jwt'))
+  async updateFitnessData(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { height: number; weight: number; age: number; goal: string },
+  ) {
+    return this.authService.updateFitnessData(req.user.userId, body);
+  }
+
+  @Put('setup')
+  @UseGuards(AuthGuard('jwt'))
+  async setup(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { height: number; weight: number; age: number; goal: string },
+  ) {
+    return this.authService.setupProfile(req.user.userId, body);
+  }
+
+  // @Get('profile-dashboard')
+  // @UseGuards(AuthGuard('jwt'))
+  // async profileDashboard(@Req() req: AuthenticatedRequest) {
+  //   return this.authService.getProfileWithLastWorkout(req.user.userId);
+  // }
 }

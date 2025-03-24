@@ -22,6 +22,11 @@ model User {
   isVerified        Boolean  @default(false)
   verificationCode  String?
   picture           String?
+  height            Int?
+  weight            Int?
+  age               Int?
+  goal              GoalType
+  isSetupComplete   Boolean  @default(false)
   verificationToken String?  @unique
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -31,6 +36,12 @@ enum Role {
   USER
   PREMIUM
   ADMIN
+}
+
+enum GoalType {
+  LOSE_WEIGHT
+  GAIN_MUSCLE
+  STAY_ACTIVE
 }
 
 model Otp {

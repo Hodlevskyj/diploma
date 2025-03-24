@@ -1,6 +1,12 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { GoalType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { Response } from 'express';
@@ -170,18 +176,38 @@ export class AuthService {
     return { message: 'Email verified successfully' };
   }
 
+  // async login(email: string, password: string, res: Response) {
+  //   const user = await this.prisma.user.findUnique({ where: { email } });
+  //   if (!user || !(await bcrypt.compare(password, user.password))) {
+  //     throw new UnauthorizedException('Invalid credentials');
+  //   }
+
+  //   const tokens = this.generateToken(user);
+
+  //   // Set cookies
+  //   this.setCookies(res, tokens);
+
+  //   return { message: 'Login successful' };
+  // }
+
   async login(email: string, password: string, res: Response) {
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    if (!user)
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid)
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
 
     const tokens = this.generateToken(user);
 
-    // Set cookies
-    this.setCookies(res, tokens);
+    res.cookie('access_token', tokens.access_token, { httpOnly: true });
+    res.cookie('refresh_token', tokens.refresh_token, { httpOnly: true });
 
-    return { message: 'Login successful' };
+    return {
+      message: 'Login successful',
+      isSetupComplete: user.isSetupComplete,
+    };
   }
 
   async forgotPassword(email: string) {}
@@ -248,6 +274,10 @@ export class AuthService {
         role: true,
         picture: true,
         createdAt: true,
+        height: true,
+        weight: true,
+        age: true,
+        goal: true,
       },
     });
   }
@@ -271,4 +301,65 @@ export class AuthService {
       },
     });
   }
+
+  async updateFitnessData(
+    userId: number,
+    data: { height: number; weight: number; age: number; goal: string },
+  ) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        height: Number(data.height),
+        weight: Number(data.weight),
+        age: Number(data.age),
+        goal: data.goal ? (data.goal.toUpperCase() as GoalType) : undefined,
+        isSetupComplete: true,
+      },
+    });
+  }
+
+  async setupProfile(
+    userId: number,
+    data: { height: number; weight: number; age: number; goal: string },
+  ) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        height: Number(data.height),
+        weight: Number(data.weight),
+        age: Number(data.age),
+        goal: data.goal.toUpperCase() as GoalType,
+        isSetupComplete: true,
+      },
+    });
+  }
+
+  // async getProfileWithLastWorkout(userId: number) {
+  //   const user = await this.prisma.user.findUnique({
+  //     where: { id: userId },
+  //     select: {
+  //       name: true,
+  //       email: true,
+  //       role: true,
+  //       picture: true,
+  //       createdAt: true,
+  //       height: true,
+  //       weight: true,
+  //       age: true,
+  //       goal: true,
+  //     },
+  //   });
+  //   if (!user) {
+  //     throw new Error('User not found');
+  //   }
+
+  //   const lastWorkout = await this.prisma.workoutHistory.findFirst({
+  //     where: { userId },
+  //     orderBy: { createdAt: 'desc' },
+  //   });
+  //   return {
+  //     ...user,
+  //     lastWorkout: lastWorkout ? lastWorkout.date : null,
+  //   };
+  // }
 }

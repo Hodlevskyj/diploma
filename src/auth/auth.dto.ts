@@ -1,11 +1,13 @@
+import { GoalType } from '@prisma/client';
 import {
   IsEmail,
+  IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
-
 export class RegisterDto {
   @IsNotEmpty({ message: 'Name is required' })
   name: string;
@@ -22,4 +24,22 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   name?: string;
+}
+
+export class UpdateFitnessDto {
+  @IsOptional()
+  @IsInt()
+  height: number;
+
+  @IsOptional()
+  @IsInt()
+  weight: number;
+
+  @IsOptional()
+  @IsInt()
+  age: number;
+
+  @IsOptional()
+  @IsEnum(GoalType)
+  goal: GoalType;
 }

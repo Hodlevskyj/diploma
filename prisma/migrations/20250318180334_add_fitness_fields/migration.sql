@@ -1,6 +1,9 @@
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('USER', 'PREMIUM', 'ADMIN');
 
+-- CreateEnum
+CREATE TYPE "GoalType" AS ENUM ('LOSE_WEIGHT', 'GAIN_MUSCLE', 'STAY_ACTIVE');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -10,6 +13,11 @@ CREATE TABLE "User" (
     "role" "Role" NOT NULL DEFAULT 'USER',
     "isVerified" BOOLEAN NOT NULL DEFAULT false,
     "verificationCode" TEXT,
+    "picture" TEXT,
+    "height" INTEGER,
+    "weight" DOUBLE PRECISION,
+    "age" INTEGER,
+    "goal" "GoalType",
     "verificationToken" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
