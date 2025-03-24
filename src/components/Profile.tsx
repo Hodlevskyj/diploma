@@ -5,6 +5,11 @@ import { useEffect, useState } from 'react'
 interface User {
 	name: string
 	picture?: string
+	email: string
+	height?: number
+	weight?: number
+	age?: number
+	goal?: string
 }
 
 export default function Profile() {
@@ -109,6 +114,27 @@ export default function Profile() {
 							className='w-20 h-20 rounded-full object-cover'
 						/>
 					)}
+					<p>
+						<strong>Name:</strong> {user.name}
+					</p>
+					<p>
+						<strong>Email:</strong> {user.email}
+					</p>
+					<p>
+						<strong>Height:</strong>{' '}
+						{user.height ? `${user.height} cm` : 'Not set'}
+					</p>
+					<p>
+						<strong>Weight:</strong>{' '}
+						{user.weight ? `${user.weight} kg` : 'Not set'}
+					</p>
+					<p>
+						<strong>Age:</strong> {user.age ? `${user.age} years` : 'Not set'}
+					</p>
+					<p>
+						<strong>Goal:</strong>{' '}
+						{user.goal ? user.goal.replace('_', ' ') : 'Not set'}
+					</p>
 					<button
 						type='submit'
 						className='bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition'

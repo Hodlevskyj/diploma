@@ -45,7 +45,13 @@ export default function LoginForm() {
 			}
 
 			await login(formData.email, formData.password)
+			if (!data.isSetupComplete) {
+				router.push('/setup')
+			} else {
+				router.push('/dashboard')
+			}
 			router.push('/dashboard')
+			console.log('Updating user with:', data)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Login failed')
 		} finally {
