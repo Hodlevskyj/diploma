@@ -14,22 +14,26 @@ datasource db {
 }
 
 model User {
-  id                Int      @id @default(autoincrement())
-  name              String
-  email             String   @unique
-  password          String
-  role              Role     @default(USER)
-  isVerified        Boolean  @default(false)
-  verificationCode  String?
-  picture           String?
-  height            Int?
-  weight            Int?
-  age               Int?
-  goal              GoalType
-  isSetupComplete   Boolean  @default(false)
-  verificationToken String?  @unique
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                 Int       @id @default(autoincrement())
+  name               String
+  email              String    @unique
+  password           String
+  role               Role      @default(USER)
+  isVerified         Boolean   @default(false)
+  verificationCode   String?
+  picture            String?
+  height             Int?
+  weight             Int?
+  age                Int?
+  goal               GoalType?
+  stravaId           Int?      @unique
+  stravaAccessToken  String?
+  stravaRefreshToken String?
+  stravaTokenExpires DateTime?
+  isSetupComplete    Boolean   @default(false)
+  verificationToken  String?   @unique
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 enum Role {

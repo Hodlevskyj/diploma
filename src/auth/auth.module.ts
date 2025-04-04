@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -16,8 +17,11 @@ import { JwtStrategy } from './jwt.strategy';
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '1h' },
     }),
-    ConfigModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     CloudinaryModule,
+    HttpModule,
   ],
   providers: [AuthService, JwtStrategy, PrismaService, GoogleStrategy],
   controllers: [AuthController],

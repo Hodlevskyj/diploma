@@ -15,6 +15,10 @@ import * as nodemailer from 'nodemailer';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PrismaService } from '../prisma.service';
 
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+// import { StravaTokenResponse } from '../types/express';
+
 // interface GoogleLoginResult {
 //   token: string;
 //   message: string;
@@ -50,6 +54,29 @@ interface AuthResponse {
   tokens?: Tokens;
 }
 
+interface StravaAthlete {
+  id: number;
+  username: string | null;
+  firstname: string;
+  lastname: string;
+  city: string;
+  state: string;
+  country: string;
+  sex: string;
+  profile: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface StravaTokenResponse {
+  token_type: string;
+  expires_at: number;
+  expires_in: number;
+  refresh_token: string;
+  access_token: string;
+  athlete: StravaAthlete;
+}
+
 @Injectable()
 export class AuthService {
   private transporter: nodemailer.Transporter;
@@ -58,6 +85,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configureService: ConfigService,
     private cloudinaryService: CloudinaryService,
+    private readonly httpService: HttpService,
   ) {
     this.transporter = nodemailer.createTransport({
       service: 'Gmail',
@@ -68,7 +96,7 @@ export class AuthService {
     });
   }
 
-  private generateToken(user: any) {
+  public generateToken(user: any) {
     const payload = { sub: user.id, email: user.email };
 
     return {
@@ -115,6 +143,7 @@ export class AuthService {
         password: hashedPassword,
         isVerified: false,
         verificationToken,
+        goal: null,
       },
     });
 
@@ -176,20 +205,6 @@ export class AuthService {
     return { message: 'Email verified successfully' };
   }
 
-  // async login(email: string, password: string, res: Response) {
-  //   const user = await this.prisma.user.findUnique({ where: { email } });
-  //   if (!user || !(await bcrypt.compare(password, user.password))) {
-  //     throw new UnauthorizedException('Invalid credentials');
-  //   }
-
-  //   const tokens = this.generateToken(user);
-
-  //   // Set cookies
-  //   this.setCookies(res, tokens);
-
-  //   return { message: 'Login successful' };
-  // }
-
   async login(email: string, password: string, res: Response) {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user)
@@ -240,6 +255,7 @@ export class AuthService {
             password: '',
             isVerified: true,
             picture,
+            goal: null,
           },
         });
 
@@ -334,32 +350,64 @@ export class AuthService {
     });
   }
 
-  // async getProfileWithLastWorkout(userId: number) {
-  //   const user = await this.prisma.user.findUnique({
-  //     where: { id: userId },
-  //     select: {
-  //       name: true,
-  //       email: true,
-  //       role: true,
-  //       picture: true,
-  //       createdAt: true,
-  //       height: true,
-  //       weight: true,
-  //       age: true,
-  //       goal: true,
-  //     },
-  //   });
-  //   if (!user) {
-  //     throw new Error('User not found');
-  //   }
+  async exchangeCodeForToken(code: string): Promise<{ access_token: string }> {
+    if (!code) {
+      throw new HttpException('Code is missing', HttpStatus.BAD_REQUEST);
+    }
 
-  //   const lastWorkout = await this.prisma.workoutHistory.findFirst({
-  //     where: { userId },
-  //     orderBy: { createdAt: 'desc' },
-  //   });
-  //   return {
-  //     ...user,
-  //     lastWorkout: lastWorkout ? lastWorkout.date : null,
-  //   };
-  // }
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post('https://www.strava.com/oauth/token', null, {
+          params: {
+            client_id: process.env.STRAVA_CLIENT_ID,
+            client_secret: process.env.STRAVA_CLIENT_SECRET,
+            code: code,
+            grant_type: 'authorization_code',
+          },
+        }),
+      );
+
+      return { access_token: response.data.access_token };
+    } catch (error) {
+      console.error(
+        'Strava token exchange failed:',
+        error.response?.data || error.message,
+      );
+      throw new HttpException(
+        'Failed to exchange code',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async handleStravaAuth(stravaData: StravaTokenResponse) {
+    const { athlete, access_token, refresh_token, expires_at } = stravaData;
+
+    // Find or create user
+    const user = await this.prisma.user.upsert({
+      where: { stravaId: athlete.id },
+      update: {
+        stravaAccessToken: access_token,
+        stravaRefreshToken: refresh_token,
+        stravaTokenExpires: new Date(expires_at * 1000),
+        name: `${athlete.firstname} ${athlete.lastname}`,
+        picture: athlete.profile,
+      },
+      create: {
+        stravaId: athlete.id,
+        stravaAccessToken: access_token,
+        stravaRefreshToken: refresh_token,
+        stravaTokenExpires: new Date(expires_at * 1000),
+        name: `${athlete.firstname} ${athlete.lastname}`,
+        picture: athlete.profile,
+        email: `strava_${athlete.id}@example.com`, // placeholder email
+        role: 'USER',
+        password: '',
+        goal: null,
+        isVerified: true,
+      },
+    });
+
+    return user;
+  }
 }

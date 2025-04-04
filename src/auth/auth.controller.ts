@@ -1,3 +1,4 @@
+import { HttpService } from '@nestjs/axios';
 import {
   Body,
   Controller,
@@ -15,11 +16,12 @@ import {
   UseInterceptors,
   ValidationPipe,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { AuthenticatedRequest } from '../types/express';
+import { AuthenticatedRequest, StravaTokenResponse } from '../types/express';
 import { RegisterDto } from './auth.dto';
 import { AuthService } from './auth.service';
 
@@ -28,6 +30,8 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
   ) {}
 
   @Post('register')
@@ -183,6 +187,38 @@ export class AuthController {
     @Body() body: { height: number; weight: number; age: number; goal: string },
   ) {
     return this.authService.setupProfile(req.user.userId, body);
+  }
+
+  @Post('strava')
+  async exchangeStravaCode(@Body('code') code: string) {
+    try {
+      console.log('Received code from frontend:', code);
+
+      const response = await this.httpService
+        .post<StravaTokenResponse>('https://www.strava.com/oauth/token', {
+          client_id: this.configService.get('STRAVA_CLIENT_ID'),
+          client_secret: this.configService.get('STRAVA_CLIENT_SECRET'),
+          code,
+          grant_type: 'authorization_code',
+        })
+        .toPromise();
+
+      console.log('Strava API response:', response.data);
+
+      const user = await this.authService.handleStravaAuth(response.data);
+      const tokens = await this.authService.generateToken(user);
+
+      return { access_token: tokens.access_token };
+    } catch (error) {
+      console.error(
+        'Strava token exchange error:',
+        error.response?.data || error,
+      );
+      throw new HttpException(
+        'Failed to authenticate with Strava',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   // @Get('profile-dashboard')
