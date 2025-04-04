@@ -59,3 +59,20 @@ export async function updateProfile(name: string, file?: File) {
 
 	return response.json()
 }
+
+export async function exchangeStravaCode(code: string) {
+	const response = await fetch(
+		`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/strava`,
+		{
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ code }),
+		}
+	)
+
+	if (!response.ok) {
+		throw new Error('Failed to exchange code')
+	}
+
+	return response.json()
+}
