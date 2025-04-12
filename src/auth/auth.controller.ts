@@ -221,6 +221,12 @@ export class AuthController {
     }
   }
 
+  @Get('activities')
+  @UseGuards(AuthGuard('jwt'))
+  async getActivities(@Req() req: AuthenticatedRequest) {
+    return this.authService.getUserActivities(req.user.userId);
+  }
+
   // @Get('profile-dashboard')
   // @UseGuards(AuthGuard('jwt'))
   // async profileDashboard(@Req() req: AuthenticatedRequest) {

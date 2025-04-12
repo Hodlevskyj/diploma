@@ -410,4 +410,28 @@ export class AuthService {
 
     return user;
   }
+
+  async getUserActivities(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.stravaAccessToken) {
+      throw new Error('Strava access token not found for user');
+    }
+
+    const response = await firstValueFrom(
+      this.httpService.get('https://www.strava.com/api/v3/athlete/activities', {
+        headers: {
+          Authorization: `Bearer ${user.stravaAccessToken}`,
+        },
+        params: {
+          per_page: 10,
+          page: 1,
+        },
+      }),
+    );
+
+    return response.data;
+  }
 }
