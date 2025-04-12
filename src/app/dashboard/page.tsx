@@ -1,5 +1,6 @@
 'use client'
 
+import Activities from '@/components/activity/Activities'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -77,6 +78,7 @@ export default function DashboardPage() {
 					</div>
 				</div>
 			</main>
+			<Activities />
 		</div>
 	)
 }
