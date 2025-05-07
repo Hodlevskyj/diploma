@@ -8,31 +8,35 @@ export async function GET(req: Request) {
 	const code = searchParams.get('code')
 
 	if (!code) {
-		const errorUrl = new URL('/login', baseUrl)
-		errorUrl.searchParams.set('error', 'no_code')
-		return NextResponse.redirect(errorUrl.toString())
+		return NextResponse.redirect(
+			new URL('/login?error=no_code', baseUrl).toString()
+		)
 	}
 
 	try {
-		console.log('Exchanging code with API:', code)
+		console.log('Exchanging Strava code:', code)
 
 		const response = await fetch(`${apiUrl}/auth/strava`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ code }),
+			cache: 'no-store',
 		})
 
+		const responseText = await response.text()
+		console.log('API Response:', response.status, responseText)
+
 		if (!response.ok) {
-			console.error('API error:', response.status, await response.text())
-			throw new Error(`API returned ${response.status}`)
+			throw new Error(`API error: ${response.status} ${responseText}`)
 		}
 
-		const data = await response.json()
-		console.log('API response:', { hasToken: !!data.access_token })
+		const data = JSON.parse(responseText)
 
+		// Create redirect response
 		const redirectUrl = new URL('/dashboard', baseUrl)
 		const redirectResponse = NextResponse.redirect(redirectUrl.toString())
 
+		// Set auth token cookie
 		redirectResponse.cookies.set({
 			name: 'access_token',
 			value: data.access_token,
@@ -46,8 +50,8 @@ export async function GET(req: Request) {
 		return redirectResponse
 	} catch (error) {
 		console.error('Authentication error:', error)
-		const errorUrl = new URL('/login', baseUrl)
-		errorUrl.searchParams.set('error', 'auth_failed')
-		return NextResponse.redirect(errorUrl.toString())
+		return NextResponse.redirect(
+			new URL('/login?error=auth_failed', baseUrl).toString()
+		)
 	}
 }
