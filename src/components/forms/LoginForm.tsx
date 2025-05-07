@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import GoogleLoginButton from '../button/GoogleLoginButton'
 import StravaLoginButton from '../button/StravaLoginButton'
 
 export default function LoginForm() {
@@ -106,7 +107,7 @@ export default function LoginForm() {
 							{loading ? 'Signing in...' : 'Sign in'}
 						</button>
 					</div>
-
+					<GoogleLoginButton />
 					<div>
 						<StravaLoginButton />
 					</div>

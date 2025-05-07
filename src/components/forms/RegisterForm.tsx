@@ -4,6 +4,7 @@ import useAuthRedirect from '@/hooks/useAuthRedirect'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import StravaLoginButton from '../button/StravaLoginButton'
 
 export default function RegisterForm() {
 	const router = useRouter()
@@ -132,6 +133,7 @@ export default function RegisterForm() {
 						/>
 						Sign up with Google
 					</button>
+					<StravaLoginButton />
 
 					<div>
 						<button
