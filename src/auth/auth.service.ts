@@ -1,3 +1,4 @@
+import { HttpService } from '@nestjs/axios';
 import {
   HttpException,
   HttpStatus,
@@ -12,30 +13,10 @@ import * as crypto from 'crypto';
 import { Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import * as nodemailer from 'nodemailer';
+import { firstValueFrom } from 'rxjs';
+import { ActivitiesService } from '../activities/activities.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PrismaService } from '../prisma.service';
-
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
-// import { StravaTokenResponse } from '../types/express';
-
-// interface GoogleLoginResult {
-//   token: string;
-//   message: string;
-// }
-
-// interface Tokens {
-//   access_token: string;
-//   refresh_token: string;
-// }
-
-// interface GoogleLoginResult {
-//   message: string;
-//   tokens: {
-//     access_token: string;
-//     refresh_token: string;
-//   };
-// }
 
 interface GoogleUser {
   email: string;
@@ -86,6 +67,7 @@ export class AuthService {
     private configureService: ConfigService,
     private cloudinaryService: CloudinaryService,
     private readonly httpService: HttpService,
+    private readonly activitiesService: ActivitiesService,
   ) {
     this.transporter = nodemailer.createTransport({
       service: 'Gmail',
@@ -110,7 +92,7 @@ export class AuthService {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 1000, // 60 minutes
+      maxAge: 60 * 60 * 1000, // 60 хвилин
     });
 
     res.cookie('refresh_token', tokens.refresh_token, {
@@ -118,7 +100,7 @@ export class AuthService {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/auth/refresh', // Restrict to refresh endpoint
+      path: '/auth/refresh', // Обмежити доступ тільки для endpoint оновлення токена
     });
   }
 
@@ -381,15 +363,27 @@ export class AuthService {
   }
 
   async handleStravaAuth(stravaData: StravaTokenResponse) {
-    const { athlete, access_token, refresh_token, expires_at } = stravaData;
+    const { athlete } = stravaData;
+    let { access_token, refresh_token, expires_at } = stravaData;
 
-    // Find or create user
+    // конвертуємо expires_at в Date та додаємо буферний час
+    let tokenExpiration = new Date(expires_at * 1000);
+    const now = new Date();
+
+    // оновлення токена, якщо термін дії закінчиться через 10хвилин
+    if (tokenExpiration.getTime() - now.getTime() < 10 * 60 * 1000) {
+      const newTokens = await this.refreshStravaToken(refresh_token);
+      access_token = newTokens.access_token;
+      refresh_token = newTokens.refresh_token;
+      tokenExpiration = new Date(newTokens.expires_at * 1000);
+    }
+
     const user = await this.prisma.user.upsert({
       where: { stravaId: athlete.id },
       update: {
         stravaAccessToken: access_token,
         stravaRefreshToken: refresh_token,
-        stravaTokenExpires: new Date(expires_at * 1000),
+        stravaTokenExpires: tokenExpiration,
         name: `${athlete.firstname} ${athlete.lastname}`,
         picture: athlete.profile,
       },
@@ -397,10 +391,10 @@ export class AuthService {
         stravaId: athlete.id,
         stravaAccessToken: access_token,
         stravaRefreshToken: refresh_token,
-        stravaTokenExpires: new Date(expires_at * 1000),
+        stravaTokenExpires: tokenExpiration,
         name: `${athlete.firstname} ${athlete.lastname}`,
         picture: athlete.profile,
-        email: `strava_${athlete.id}@example.com`, // placeholder email
+        email: `strava_${athlete.id}@example.com`,
         role: 'USER',
         password: '',
         goal: null,
@@ -408,28 +402,21 @@ export class AuthService {
       },
     });
 
+    await this.activitiesService.syncUserActivities(user.id);
     return user;
   }
 
-  async getUserActivities(userId: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user || !user.stravaAccessToken) {
-      throw new Error('Strava access token not found for user');
-    }
-
+  private async refreshStravaToken(refreshToken: string) {
     const response = await firstValueFrom(
-      this.httpService.get('https://www.strava.com/api/v3/athlete/activities', {
-        headers: {
-          Authorization: `Bearer ${user.stravaAccessToken}`,
+      this.httpService.post<StravaTokenResponse>(
+        'https://www.strava.com/oauth/token',
+        {
+          client_id: process.env.STRAVA_CLIENT_ID,
+          client_secret: process.env.STRAVA_CLIENT_SECRET,
+          refresh_token: refreshToken,
+          grant_type: 'refresh_token',
         },
-        params: {
-          per_page: 10,
-          page: 1,
-        },
-      }),
+      ),
     );
 
     return response.data;

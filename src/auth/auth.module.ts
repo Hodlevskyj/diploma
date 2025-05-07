@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ActivitiesModule } from 'src/activities/activities.module';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { PrismaService } from '../prisma.service';
 import { AuthController } from './auth.controller';
@@ -22,6 +23,7 @@ import { JwtStrategy } from './jwt.strategy';
     }),
     CloudinaryModule,
     HttpModule,
+    ActivitiesModule,
   ],
   providers: [AuthService, JwtStrategy, PrismaService, GoogleStrategy],
   controllers: [AuthController],

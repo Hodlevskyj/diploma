@@ -20,8 +20,9 @@ import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
+import { firstValueFrom } from 'rxjs';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { AuthenticatedRequest, StravaTokenResponse } from '../types/express';
+import { AuthenticatedRequest } from '../types/express';
 import { RegisterDto } from './auth.dto';
 import { AuthService } from './auth.service';
 
@@ -189,19 +190,51 @@ export class AuthController {
     return this.authService.setupProfile(req.user.userId, body);
   }
 
+  // @Post('strava')
+  // async exchangeStravaCode(@Body('code') code: string) {
+  //   try {
+  //     console.log('Received code from frontend:', code);
+
+  //     const response = await this.httpService
+  //       .post<StravaTokenResponse>('https://www.strava.com/oauth/token', {
+  //         client_id: this.configService.get('STRAVA_CLIENT_ID'),
+  //         client_secret: this.configService.get('STRAVA_CLIENT_SECRET'),
+  //         code,
+  //         grant_type: 'authorization_code',
+  //       })
+  //       .toPromise();
+
+  //     console.log('Strava API response:', response.data);
+
+  //     const user = await this.authService.handleStravaAuth(response.data);
+  //     const tokens = await this.authService.generateToken(user);
+
+  //     return { access_token: tokens.access_token };
+  //   } catch (error) {
+  //     console.error(
+  //       'Strava token exchange error:',
+  //       error.response?.data || error,
+  //     );
+  //     throw new HttpException(
+  //       'Failed to authenticate with Strava',
+  //       HttpStatus.BAD_REQUEST,
+  //     );
+  //   }
+  // }
+
   @Post('strava')
   async exchangeStravaCode(@Body('code') code: string) {
     try {
-      console.log('Received code from frontend:', code);
+      console.log('Received Strava code:', code);
 
-      const response = await this.httpService
-        .post<StravaTokenResponse>('https://www.strava.com/oauth/token', {
+      const response = await firstValueFrom(
+        this.httpService.post('https://www.strava.com/oauth/token', {
           client_id: this.configService.get('STRAVA_CLIENT_ID'),
           client_secret: this.configService.get('STRAVA_CLIENT_SECRET'),
           code,
           grant_type: 'authorization_code',
-        })
-        .toPromise();
+        }),
+      );
 
       console.log('Strava API response:', response.data);
 
@@ -212,7 +245,7 @@ export class AuthController {
     } catch (error) {
       console.error(
         'Strava token exchange error:',
-        error.response?.data || error,
+        error.response?.data || error.message,
       );
       throw new HttpException(
         'Failed to authenticate with Strava',
@@ -220,12 +253,13 @@ export class AuthController {
       );
     }
   }
+  zs;
 
-  @Get('activities')
-  @UseGuards(AuthGuard('jwt'))
-  async getActivities(@Req() req: AuthenticatedRequest) {
-    return this.authService.getUserActivities(req.user.userId);
-  }
+  // @Get('activities')
+  // @UseGuards(AuthGuard('jwt'))
+  // async getActivities(@Req() req: AuthenticatedRequest) {
+  //   return this.authService.getUserActivities(req.user.userId);
+  // }
 
   // @Get('profile-dashboard')
   // @UseGuards(AuthGuard('jwt'))
