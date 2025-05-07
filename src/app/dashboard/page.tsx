@@ -2,14 +2,20 @@
 
 import Activities from '@/components/activity/Activities'
 import { useAuth } from '@/context/AuthContext'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+
+const StravaMap = dynamic(() => import('@/components/activity/StravaMap'), {
+	ssr: false,
+})
 
 export default function DashboardPage() {
 	// const { user, loading, logout } = useAuth()
 	const { user, logout } = useAuth()
 	const [loading, setLoading] = useState(true)
 	const router = useRouter()
+	const [activity, setActivity] = useState<any>(null)
 
 	useEffect(() => {
 		const checkAuth = async () => {
@@ -65,7 +71,6 @@ export default function DashboardPage() {
 					</div>
 				</div>
 			</nav>
-
 			<main className='max-w-7xl mx-auto py-6 sm:px-6 lg:px-8'>
 				<div className='px-4 py-6 sm:px-0'>
 					<div className='border-4 border-dashed border-gray-200 rounded-lg p-4'>
@@ -78,6 +83,12 @@ export default function DashboardPage() {
 					</div>
 				</div>
 			</main>
+			<div>
+				<h2>Останній маршрут:</h2>
+				{activity?.map?.summary_polyline && (
+					<StravaMap summaryPolyline={activity.map.summary_polyline} />
+				)}
+			</div>
 			<Activities />
 		</div>
 	)
