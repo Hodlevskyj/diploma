@@ -74,3 +74,17 @@ model Activity {
   averageHeartrate   Float?
   createdAt          DateTime @default(now())
 }
+
+model Exercise {
+  id          Int      @id @default(autoincrement())
+  wgerId      Int?     @unique
+  name        String   @unique
+  muscleGroup String
+  category    String
+  difficulty  String?
+  videoUrl    String?
+  description String?
+  equipment   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
