@@ -14,27 +14,29 @@ datasource db {
 }
 
 model User {
-  id                 Int        @id @default(autoincrement())
+  id                 Int                 @id @default(autoincrement())
   name               String
-  email              String     @unique
+  email              String              @unique
   password           String
-  role               Role       @default(USER)
-  isVerified         Boolean    @default(false)
+  role               Role                @default(USER)
+  isVerified         Boolean             @default(false)
   verificationCode   String?
   picture            String?
   height             Int?
   weight             Int?
   age                Int?
   goal               GoalType?
-  stravaId           Int?       @unique
+  stravaId           Int?                @unique
   stravaAccessToken  String?
   stravaRefreshToken String?
   stravaTokenExpires DateTime?
-  isSetupComplete    Boolean    @default(false)
-  verificationToken  String?    @unique
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
+  isSetupComplete    Boolean             @default(false)
+  verificationToken  String?             @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
   Activity           Activity[]
+  WorkoutPlan        WorkoutPlan[]
+  WorkoutCompletion  WorkoutCompletion[]
 }
 
 enum Role {
@@ -75,16 +77,62 @@ model Activity {
   createdAt          DateTime @default(now())
 }
 
+// model Exercise {
+//   id          Int      @id @default(autoincrement())
+//   wgerId      Int?     @unique
+//   name        String   @unique
+//   muscleGroup String
+//   category    String
+//   difficulty  String?
+//   videoUrl    String?
+//   description String?
+//   equipment   String?
+//   createdAt   DateTime @default(now())
+//   updatedAt   DateTime @updatedAt
+// }
+
 model Exercise {
+  id           Int                   @id @default(autoincrement())
+  wgerId       Int                   @unique
+  name         String                @unique
+  muscleGroup  String
+  category     String
+  difficulty   String?
+  videoUrl     String?
+  description  String?
+  equipment    String?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  workoutPlans WorkoutPlanExercise[]
+  completions  WorkoutCompletion[]
+}
+
+model WorkoutPlan {
+  id          Int                   @id @default(autoincrement())
+  userId      Int
+  user        User                  @relation(fields: [userId], references: [id])
+  name        String
+  fitnessGoal String
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  exercises   WorkoutPlanExercise[]
+}
+
+model WorkoutPlanExercise {
+  id            Int         @id @default(autoincrement())
+  workoutPlanId Int
+  exerciseId    Int
+  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id])
+  exercise      Exercise    @relation(fields: [exerciseId], references: [id])
+  order         Int
+}
+
+model WorkoutCompletion {
   id          Int      @id @default(autoincrement())
-  wgerId      Int?     @unique
-  name        String   @unique
-  muscleGroup String
-  category    String
-  difficulty  String?
-  videoUrl    String?
-  description String?
-  equipment   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  exerciseId  Int
+  exercise    Exercise @relation(fields: [exerciseId], references: [id])
+  completedAt DateTime @default(now())
+  duration    Int      @default(0)
 }
