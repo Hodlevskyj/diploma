@@ -101,6 +101,9 @@ model Exercise {
   videoUrl     String?
   description  String?
   equipment    String?
+  duration     Int?
+  reps         Int?
+  restDuration Int?
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
   workoutPlans WorkoutPlanExercise[]
