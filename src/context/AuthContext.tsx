@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { createContext, useContext, useEffect, useState } from 'react'
+
 interface User {
 	id: number
 	email: string
@@ -54,30 +55,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}
 
 	const login = async (email: string, password: string) => {
-		const response = await fetch(
-			`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`,
-			{
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
-				body: JSON.stringify({ email, password }),
+		try {
+			const response = await fetch(
+				`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`,
+				{
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
+					body: JSON.stringify({ email, password }),
+				}
+			)
+
+			if (!response.ok) {
+				const errorText = await response.text()
+				throw new Error(`Login failed: ${errorText}`)
 			}
-		)
 
-		if (!response.ok) {
-			throw new Error('Login failed')
+			await checkAuth()
+			router.push('/dashboard')
+		} catch (error) {
+			console.error('Login error:', error)
+			throw error
 		}
-
-		await checkAuth()
 	}
 
 	const logout = async () => {
-		await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
-			method: 'POST',
-			credentials: 'include',
-		})
-		setUser(null)
-		router.push('/login')
+		try {
+			await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
+				method: 'POST',
+				credentials: 'include',
+			})
+			setUser(null)
+			router.push('/login')
+		} catch (error) {
+			console.error('Logout error:', error)
+		}
 	}
 
 	return (

@@ -1,3 +1,4 @@
+import Header from '@/components/Header'
 import { AuthProvider } from '@/context/AuthContext'
 import 'leaflet/dist/leaflet.css'
 import type { Metadata } from 'next'
@@ -29,7 +30,10 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
-				<AuthProvider>{children}</AuthProvider>
+				<AuthProvider>
+					{children}
+					<Header />
+				</AuthProvider>
 			</body>
 		</html>
 	)
