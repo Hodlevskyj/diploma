@@ -40,7 +40,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				}
 			)
 
-			if (response.ok) {
+			if (response.status === 401) {
+				// Спробуємо оновити токен
+				const refreshResponse = await fetch(
+					`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/refresh`,
+					{
+						method: 'POST',
+						credentials: 'include',
+					}
+				)
+
+				if (refreshResponse.ok) {
+					// Оновлення успішне, повторюємо запит
+					const retryResponse = await fetch(
+						`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/current-user`,
+						{
+							credentials: 'include',
+							headers: {
+								'Cache-Control': 'no-cache',
+								Pragma: 'no-cache',
+							},
+						}
+					)
+
+					if (retryResponse.ok) {
+						const userData = await retryResponse.json()
+						setUser(userData)
+					} else {
+						setUser(null)
+					}
+				} else {
+					setUser(null)
+				}
+			} else if (response.ok) {
 				const userData = await response.json()
 				setUser(userData)
 			} else {
