@@ -10,6 +10,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: (req: Request) => {
         const token = req.cookies?.access_token;
+        return token || null;
         if (!token) {
           throw new UnauthorizedException('No token found');
         }

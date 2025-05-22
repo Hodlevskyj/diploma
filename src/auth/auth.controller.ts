@@ -19,9 +19,10 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { firstValueFrom } from 'rxjs';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { PrismaService } from '../prisma.service';
 import { AuthenticatedRequest } from '../types/express';
 import { RegisterDto } from './auth.dto';
 import { AuthService } from './auth.service';
@@ -33,6 +34,7 @@ export class AuthController {
     private readonly cloudinaryService: CloudinaryService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Post('register')
@@ -108,30 +110,61 @@ export class AuthController {
   @Get('current-user')
   @UseGuards(AuthGuard('jwt'))
   async getCurrentUser(@Req() req: AuthenticatedRequest) {
-    return { email: req.user.email };
+    const user = await this.authService.getProfile(req.user.userId);
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    };
   }
+
   @Post('logout')
   async logout(@Res() res: Response) {
     res.clearCookie('access_token', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'localhost',
-      // sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
     });
 
     res.clearCookie('refresh_token', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'localhost',
-      // sameSite: 'strict',
-      sameSite: 'lax',
-      // path: '/auth/refresh',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/auth/refresh',
     });
 
     return res.json({ message: 'Logout successful' });
   }
 
+  @Post('refresh')
+  async refresh(@Req() req: Request, @Res() res: Response) {
+    const refreshToken = req.cookies['refresh_token'];
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
+
+    try {
+      const payload = this.authService.verifyToken(refreshToken);
+      const user = await this.prisma.user.findUnique({
+        where: { id: Number(payload.sub) },
+      });
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      const tokens = this.authService.generateToken(user);
+      this.authService.setCookies(res, tokens);
+      return res.json({
+        message: 'Token refreshed',
+        access_token: tokens.access_token,
+      });
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
   @Get('session')
-  async getSession(@Req() req) {
+  async getSession(@Req() req: Request) {
     const token = req.cookies['access_token'];
     if (!token) {
       return { message: 'No session found' };
@@ -190,38 +223,6 @@ export class AuthController {
     return this.authService.setupProfile(req.user.userId, body);
   }
 
-  // @Post('strava')
-  // async exchangeStravaCode(@Body('code') code: string) {
-  //   try {
-  //     console.log('Received code from frontend:', code);
-
-  //     const response = await this.httpService
-  //       .post<StravaTokenResponse>('https://www.strava.com/oauth/token', {
-  //         client_id: this.configService.get('STRAVA_CLIENT_ID'),
-  //         client_secret: this.configService.get('STRAVA_CLIENT_SECRET'),
-  //         code,
-  //         grant_type: 'authorization_code',
-  //       })
-  //       .toPromise();
-
-  //     console.log('Strava API response:', response.data);
-
-  //     const user = await this.authService.handleStravaAuth(response.data);
-  //     const tokens = await this.authService.generateToken(user);
-
-  //     return { access_token: tokens.access_token };
-  //   } catch (error) {
-  //     console.error(
-  //       'Strava token exchange error:',
-  //       error.response?.data || error,
-  //     );
-  //     throw new HttpException(
-  //       'Failed to authenticate with Strava',
-  //       HttpStatus.BAD_REQUEST,
-  //     );
-  //   }
-  // }
-
   @Post('strava')
   async exchangeStravaCode(@Body('code') code: string) {
     try {
@@ -253,17 +254,4 @@ export class AuthController {
       );
     }
   }
-  zs;
-
-  // @Get('activities')
-  // @UseGuards(AuthGuard('jwt'))
-  // async getActivities(@Req() req: AuthenticatedRequest) {
-  //   return this.authService.getUserActivities(req.user.userId);
-  // }
-
-  // @Get('profile-dashboard')
-  // @UseGuards(AuthGuard('jwt'))
-  // async profileDashboard(@Req() req: AuthenticatedRequest) {
-  //   return this.authService.getProfileWithLastWorkout(req.user.userId);
-  // }
 }

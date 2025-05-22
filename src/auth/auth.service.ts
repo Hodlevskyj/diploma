@@ -87,12 +87,12 @@ export class AuthService {
     };
   }
 
-  private setCookies(res: Response, tokens: Tokens): void {
+  public setCookies(res: Response, tokens: Tokens): void {
     res.cookie('access_token', tokens.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 1000, // 60 хвилин
+      maxAge: 15 * 60 * 1000, // 60 хвилин
     });
 
     res.cookie('refresh_token', tokens.refresh_token, {
@@ -187,6 +187,26 @@ export class AuthService {
     return { message: 'Email verified successfully' };
   }
 
+  // async login(email: string, password: string, res: Response) {
+  //   const user = await this.prisma.user.findUnique({ where: { email } });
+  //   if (!user)
+  //     throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+
+  //   const isPasswordValid = await bcrypt.compare(password, user.password);
+  //   if (!isPasswordValid)
+  //     throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+
+  //   const tokens = this.generateToken(user);
+
+  //   res.cookie('access_token', tokens.access_token, { httpOnly: true });
+  //   res.cookie('refresh_token', tokens.refresh_token, { httpOnly: true });
+
+  //   return {
+  //     message: 'Login successful',
+  //     isSetupComplete: user.isSetupComplete,
+  //   };
+  // }
+
   async login(email: string, password: string, res: Response) {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user)
@@ -197,9 +217,7 @@ export class AuthService {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
 
     const tokens = this.generateToken(user);
-
-    res.cookie('access_token', tokens.access_token, { httpOnly: true });
-    res.cookie('refresh_token', tokens.refresh_token, { httpOnly: true });
+    this.setCookies(res, tokens);
 
     return {
       message: 'Login successful',
@@ -267,6 +285,7 @@ export class AuthService {
     return this.prisma.user.findUnique({
       where: { id: userId },
       select: {
+        id: true,
         name: true,
         email: true,
         role: true,
