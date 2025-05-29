@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -15,92 +17,103 @@ import { ExerciseService } from './exercise.service';
 export class ExerciseController {
   constructor(private exerciseService: ExerciseService) {}
 
-  @Post('sync')
-  async syncExercises() {
-    return this.exerciseService.syncExercisesFromWger;
-  }
-
   @Get()
-  async getAll(
-    @Query('muscleGroup') muscleGroup?: string,
-    @Query('category') category?: string,
-    @Query('search') search?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    return this.exerciseService.getExercises({
-      muscleGroup,
-      category,
-      search,
-      page: page ? Number(page) : 1,
-      limit: limit ? Number(limit) : 20,
-    });
+  async getAllExercises(@Query('category') category?: string) {
+    return this.exerciseService.getAllExercises(category);
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  async getById(@Param('id') id: string) {
-    return this.exerciseService.getExerciseById(Number(id));
-  }
-
-  @Post('plan')
-  @UseGuards(JwtAuthGuard)
-  async createWorkoutPlan(
-    @Body()
-    body: {
-      userId: number;
-      fitnessGoal: string;
-      exerciseIds: number[];
-    },
-  ) {
-    return this.exerciseService.createOrUpdateWorkoutPlan(
-      body.userId,
-      body.fitnessGoal,
-      body.exerciseIds,
-    );
-  }
-
-  @Get('plan/:userId')
-  @UseGuards(JwtAuthGuard)
-  async getWorkoutPlans(@Param('userId') userId: string) {
-    return this.exerciseService.getWorkoutPlans(Number(userId));
-  }
-
-  @Put('plan/:workoutPlanId')
-  @UseGuards(JwtAuthGuard)
-  async updateWorkoutPlan(
-    @Param('workoutPlanId') workoutPlanId: string,
-    @Body() body: { exerciseIds: number[] },
-  ) {
-    return this.exerciseService.updateWorkoutPlan(
-      Number(workoutPlanId),
-      body.exerciseIds,
-    );
+  async getExerciseById(@Param('id', ParseIntPipe) id: number) {
+    return this.exerciseService.getExerciseById(id);
   }
 
   @Post('track')
   @UseGuards(JwtAuthGuard)
-  async trackExerciseCompletion(
-    @Body() body: { userId: number; exerciseId: number; duration: number },
+  async trackProgress(
+    @Body()
+    data: {
+      userId: number;
+      exerciseId: number;
+      type: 'reps' | 'time';
+      value: number;
+      targetValue: number;
+      completed: boolean;
+      pauseCount: number;
+      resetCount: number;
+    },
   ) {
-    return this.exerciseService.trackExerciseCompletion(
-      body.userId,
-      body.exerciseId,
-      body.duration,
-    );
+    return this.exerciseService.trackProgress(data);
   }
 
-  @Get('stats/:userId')
+  @Get('progress/:userId')
   @UseGuards(JwtAuthGuard)
-  async getWorkoutStats(
-    @Param('userId') userId: string,
+  async getUserProgress(
+    @Param('userId', ParseIntPipe) userId: number,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.exerciseService.getWorkoutStats(
-      Number(userId),
-      startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined,
-    );
+    return this.exerciseService.getUserProgress(userId, startDate, endDate);
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  async createExercise(
+    @Body()
+    data: {
+      name: string;
+      muscleGroup: string;
+      exerciseCategoryId?: number;
+      difficulty?: string;
+      videoUrl?: string;
+      description?: string;
+      equipment?: string;
+      duration?: number;
+      reps?: number;
+      restDuration?: number;
+      calories?: number;
+      intensity?: string;
+    },
+  ) {
+    return this.exerciseService.createExercise(data);
+  }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  async updateExercise(
+    @Param('id', ParseIntPipe) id: number,
+    @Body()
+    data: {
+      name?: string;
+      muscleGroup?: string;
+      exerciseCategoryId?: number;
+      difficulty?: string;
+      videoUrl?: string;
+      description?: string;
+      equipment?: string;
+      duration?: number;
+      reps?: number;
+      restDuration?: number;
+      calories?: number;
+      intensity?: string;
+    },
+  ) {
+    return this.exerciseService.updateExercise(id, data);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  async deleteExercise(@Param('id', ParseIntPipe) id: number) {
+    return this.exerciseService.deleteExercise(id);
+  }
+
+  @Get('categories')
+  async getCategories() {
+    return this.exerciseService.getCategories();
+  }
+
+  @Post('categories')
+  @UseGuards(JwtAuthGuard)
+  async createCategory(@Body() data: { name: string }) {
+    return this.exerciseService.createCategory(data.name);
   }
 }
