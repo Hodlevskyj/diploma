@@ -1,65 +1,99 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import CategoryButton from '../button/CategoryButton'
+
+interface ExerciseCategory {
+	id: number
+	name: string
+}
+
+interface Exercise {
+	id: number
+	name: string
+	muscleGroup: string
+	exerciseCategory: ExerciseCategory
+	equipment?: string
+	isTimeBased?: boolean // true для вправ на час, false для повторень
+}
 
 export default function ExerciseLibrary() {
 	const { user, loading: authLoading } = useAuth()
-	const [exercises, setExercises] = useState([])
-	const [filters, setFilters] = useState({
-		muscleGroup: '',
-		category: '',
-		search: '',
-		page: 1,
-		limit: 20,
-	})
+	const [exercises, setExercises] = useState<Exercise[]>([])
+	const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([])
+	const [searchTerm, setSearchTerm] = useState('')
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
+	const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
+	// Отримання вправ один раз при змінні компонента
 	useEffect(() => {
 		const fetchExercises = async () => {
+			if (!user) return
+
 			try {
 				setLoading(true)
-				const params = new URLSearchParams({
-					muscleGroup: filters.muscleGroup,
-					category: filters.category,
-					search: filters.search,
-					page: filters.page.toString(),
-					limit: filters.limit.toString(),
-				}).toString()
-
 				const response = await fetch(
-					`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises?${params}`,
+					`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises`,
 					{ credentials: 'include' }
 				)
 
 				if (!response.ok) {
-					const errorText = await response.text()
-					throw new Error(
-						`HTTP error! status: ${response.status} - ${errorText}`
-					)
+					throw new Error(`HTTP error! status: ${response.status}`)
 				}
 
 				const data = await response.json()
 				setExercises(data)
+				setFilteredExercises(data) // Ініціалізація з усіма вправами
 			} catch (err) {
 				setError(
 					err instanceof Error ? err.message : 'An unexpected error occurred'
 				)
-				console.error('Error fetching exercises:', err)
 			} finally {
 				setLoading(false)
 			}
 		}
 
 		if (!authLoading && user) fetchExercises()
-	}, [filters, authLoading, user])
+	}, [user, authLoading])
 
-	const handleFilterChange = (
-		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-	) => {
-		setFilters({ ...filters, [e.target.name]: e.target.value, page: 1 })
+	// Фільтрація вправ на основі пошуку та категорії
+	const filterExercises = useCallback(() => {
+		let result = [...exercises]
+
+		// Застосування фільтру пошуку
+		if (searchTerm) {
+			result = result.filter(exercise =>
+				exercise.name.toLowerCase().includes(searchTerm.toLowerCase())
+			)
+		}
+
+		// Застосування фільтру категорії
+		if (selectedCategory) {
+			result = result.filter(
+				exercise => exercise.exerciseCategory?.name === selectedCategory
+			)
+		}
+
+		// сортування за назвою
+		result.sort((a, b) => a.name.localeCompare(b.name))
+
+		setFilteredExercises(result) // Ініціалізація з усіма вправами
+	}, [exercises, searchTerm, selectedCategory])
+
+	// Застосування фільтрів при зміні пошуку або категорії
+	useEffect(() => {
+		filterExercises()
+	}, [filterExercises, searchTerm, selectedCategory])
+
+	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setSearchTerm(e.target.value)
+	}
+
+	const handleCategoryFilter = (category: string | null) => {
+		setSelectedCategory(category)
 	}
 
 	if (authLoading || loading) return <p>Завантаження вправ...</p>
@@ -73,32 +107,53 @@ export default function ExerciseLibrary() {
 			<div className='flex flex-wrap gap-4 mb-6'>
 				<input
 					type='text'
-					name='search'
-					value={filters.search}
-					onChange={handleFilterChange}
+					value={searchTerm}
+					onChange={handleSearchChange}
 					placeholder='Пошук вправ...'
 					className='border p-2 rounded'
 				/>
-				<select
-					name='category'
-					value={filters.category}
-					onChange={handleFilterChange}
-					className='border p-2 rounded'
-				>
-					<option value=''>Всі категорії</option>
-					<option value='Cardio'>Кардіо</option>
-					<option value='Strength'>Силові тренування</option>
-					<option value='Stretching'>Розтяжка</option>
-				</select>
+				<div className='flex gap-2'>
+					<CategoryButton
+						category={null}
+						selectedCategory={selectedCategory}
+						onClick={() => handleCategoryFilter(null)}
+					>
+						Показати всі
+					</CategoryButton>
+
+					<CategoryButton
+						category='Cardio'
+						selectedCategory={selectedCategory}
+						onClick={() => handleCategoryFilter('Cardio')}
+					>
+						Кардіо
+					</CategoryButton>
+
+					<CategoryButton
+						category='Strength'
+						selectedCategory={selectedCategory}
+						onClick={() => handleCategoryFilter('Strength')}
+					>
+						Силові тренування
+					</CategoryButton>
+
+					<CategoryButton
+						category='Stretching'
+						selectedCategory={selectedCategory}
+						onClick={() => handleCategoryFilter('Stretching')}
+					>
+						Розтяжка
+					</CategoryButton>
+				</div>
 			</div>
 
 			<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-				{exercises.length > 0 ? (
-					exercises.map((exercise: any) => (
+				{filteredExercises.length > 0 ? (
+					filteredExercises.map(exercise => (
 						<div key={exercise.id} className='bg-white p-4 rounded shadow'>
 							<h3 className='text-lg font-semibold'>{exercise.name}</h3>
-							<p>М’язова група: {exercise.muscleGroup}</p>
-							<p>Категорія: {exercise.category}</p>
+							<p>М'язова група: {exercise.muscleGroup}</p>
+							<p>Категорія: {exercise.exerciseCategory?.name}</p>
 							{exercise.equipment && <p>Обладнання: {exercise.equipment}</p>}
 							<Link
 								href={`/exercises/${exercise.id}`}
@@ -111,23 +166,6 @@ export default function ExerciseLibrary() {
 				) : (
 					<p>Вправи не знайдено.</p>
 				)}
-			</div>
-
-			<div className='mt-4 flex justify-between'>
-				<button
-					onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
-					disabled={filters.page === 1}
-					className='px-4 py-2 bg-gray-200 rounded disabled:opacity-50'
-				>
-					Попередня
-				</button>
-				<button
-					onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
-					disabled={exercises.length < filters.limit}
-					className='px-4 py-2 bg-gray-200 rounded disabled:opacity-50'
-				>
-					Наступна
-				</button>
 			</div>
 		</div>
 	)
