@@ -38,6 +38,7 @@ model User {
   WorkoutPlan        WorkoutPlan[]
   WorkoutCompletion  WorkoutPlanCompletion[]
   TrackedExercise    TrackedExercise[]
+  Exercise           Exercise[]
 }
 
 enum Role {
@@ -129,11 +130,17 @@ model Exercise {
   restDuration       Int?
   calories           Int?
   intensity          String?
+  imageUrl           String?
   createdAt          DateTime                @default(now())
   updatedAt          DateTime                @updatedAt
   workoutPlans       WorkoutPlanExercise[]
   completions        WorkoutPlanCompletion[]
   TrackedExercise    TrackedExercise[]
+  userId             Int
+  user               User                    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([exerciseCategoryId])
 }
 
 model WorkoutPlan {
