@@ -3,134 +3,159 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
-  HttpStatus,
   Param,
+  ParseIntPipe,
+  Patch,
   Post,
-  Put,
   Request,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreatePlanDto } from './dto/createPlan.dto';
 import { PlanExerciseService } from './planexercise.service';
-import {
-  AddExerciseToPlanDto,
-  CreatePlanDto,
-  UpdateExerciseInPlanDto,
-  UpdatePlanDto,
-} from './plansexercise.dto';
+import { UpdatePlanDto } from './plansexercise.dto';
 
 @Controller('plans')
 @UseGuards(JwtAuthGuard)
 export class PlansExerciseController {
-  constructor(private readonly plansService: PlanExerciseService) {}
-
-  @Get()
-  async findAll(@Request() req) {
-    console.log('User ID from request:', req.user?.userId);
-    return this.plansService.findAll(req.user.userId);
-  }
-  @Get(':id')
-  async findOne(@Request() req, @Param('id') id: string) {
-    try {
-      const plan = await this.plansService.findOne(
-        req.user.userId,
-        parseInt(id),
-      );
-      return {
-        success: true,
-        data: plan,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Помилка завантаження плану',
-        error instanceof HttpException
-          ? error.getStatus()
-          : HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
+  constructor(private readonly workoutPlanService: PlanExerciseService) {}
 
   @Post()
-  async create(@Request() req, @Body() createPlanDto: CreatePlanDto) {
-    try {
-      console.log('Request body:', createPlanDto);
-      console.log('User from request:', req.user);
-
-      if (!req.user?.userId) {
-        throw new HttpException('User ID is missing', HttpStatus.UNAUTHORIZED);
-      }
-
-      const plan = await this.plansService.create(
-        req.user.userId,
-        createPlanDto,
-      );
-      return plan;
-    } catch (error) {
-      console.error('Controller error:', error);
-      throw new HttpException(
-        error.message || 'Failed to create plan',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+  create(@Body() dto: CreatePlanDto, @Request() req) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.create(userId, dto);
   }
 
-  @Put(':id')
-  async update(
+  @Get()
+  findAll(@Request() req) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.findAll(userId);
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.findOne(id, userId);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdatePlanDto,
     @Request() req,
-    @Param('id') id: string,
-    @Body() updatePlanDto: UpdatePlanDto,
   ) {
-    return this.plansService.update(
-      req.user.userId,
-      parseInt(id),
-      updatePlanDto,
-    );
+    const userId = req.user.userId;
+    return this.workoutPlanService.update(id, userId, dto);
   }
 
   @Delete(':id')
-  async remove(@Request() req, @Param('id') id: string) {
-    return this.plansService.remove(req.user.userId, parseInt(id));
+  remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.remove(id, userId);
   }
 
   @Post(':id/exercises')
-  async addExerciseToPlan(
+  addExerciseToPlan(
+    @Param('id', ParseIntPipe) planId: number,
+    @Body()
+    dto: {
+      exerciseId: number;
+      order: number;
+      reps?: number;
+      duration?: number;
+      restDuration?: number;
+    },
     @Request() req,
-    @Param('id') planId: string,
-    @Body() addExerciseDto: AddExerciseToPlanDto,
   ) {
-    return this.plansService.addExerciseToPlan(
-      req.user.userId,
-      parseInt(planId),
-      addExerciseDto,
-    );
+    const userId = req.user.userId;
+    return this.workoutPlanService.addExerciseToPlan(planId, userId, dto);
   }
 
-  @Put(':id/exercises/:exerciseId')
-  async updateExerciseInPlan(
-    @Request() req,
-    @Param('id') planId: string,
-    @Param('exerciseId') exerciseId: string,
-    @Body() updateExerciseDto: UpdateExerciseInPlanDto,
-  ) {
-    return this.plansService.updateExerciseInPlan(
-      req.user.userId,
-      parseInt(planId),
-      parseInt(exerciseId),
-      updateExerciseDto,
-    );
-  }
-
-  @Delete(':id/exercises/:exerciseId')
+  @Delete(':plandId/exercises/:exerciseId')
   async removeExerciseFromPlan(
+    @Param('plandId', ParseIntPipe) planId: number,
+    @Param('exerciseId', ParseIntPipe) exerciseId: number,
     @Request() req,
-    @Param('id') planId: string,
-    @Param('exerciseId') exerciseId: string,
   ) {
-    return this.plansService.removeExerciseFromPlan(
-      req.user.userId,
-      parseInt(planId),
-      parseInt(exerciseId),
+    const userId = req.user.userId;
+    return this.workoutPlanService.removeExerciseFromPlan(
+      planId,
+      exerciseId,
+      userId,
     );
+  }
+  @Patch(':planId/exercises/:exerciseId')
+  async updateExerciseInPlan(
+    @Param('planId', ParseIntPipe) planId: number,
+    @Param('exerciseId', ParseIntPipe) exerciseId: number,
+    @Body()
+    dto: {
+      order: number;
+      reps?: number;
+      duration?: number;
+      restDuration?: number;
+    },
+    @Request() req,
+  ) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.updateExerciseInPlan(
+      planId,
+      exerciseId,
+      userId,
+      dto,
+    );
+  }
+
+  @Post(':id/complete')
+  async completePlan(
+    @Param('id', ParseIntPipe) planId: number,
+    @Body()
+    body: {
+      trackedExercises: {
+        exerciseId: number;
+        type: 'reps' | 'time';
+        value: number;
+        targetValue: number;
+        completed: boolean;
+        pauseCount: number;
+        resetCount: number;
+      }[];
+      status: 'COMPLETED' | 'CANCELLED';
+    },
+    @Request() req,
+  ) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.completePlan(planId, userId, body);
+  }
+
+  //історія виконання плану
+  @Get(':id/progress/:userId')
+  async getPlanProgress(
+    @Param('id', ParseIntPipe) planId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.workoutPlanService.getPlanProgress(planId, userId);
+  }
+
+  //збереження проміжного прогресу
+  @Post(':id/progress')
+  async savePartialProgress(
+    @Param('id', ParseIntPipe) planId: number,
+    @Body()
+    body: {
+      trackedExercises: {
+        exerciseId: number;
+        type: 'reps' | 'time';
+        value: number;
+        targetValue: number;
+        completed: boolean;
+        pauseCount: number;
+        resetCount: number;
+      }[];
+    },
+    @Request() req,
+  ) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.savePartialProgress(planId, userId, body);
   }
 }
