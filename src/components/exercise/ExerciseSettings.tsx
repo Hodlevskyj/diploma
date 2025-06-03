@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Exercise, ExerciseProgress } from '../../types/exercise'
+import { Exercise, ExerciseProgress } from '../../types/workout'
 
 interface ExerciseSettingsProps {
 	exercise: Exercise

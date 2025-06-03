@@ -9,8 +9,9 @@ import { useAuth } from '../../context/AuthContext'
 import {
 	Exercise,
 	ExerciseProgress,
+	ExerciseType,
 	TrackedExercise,
-} from '../../types/exercise'
+} from '../../types/workout'
 import ExerciseCounter from './ExerciseCounter'
 import ExerciseSettings from './ExerciseSettings'
 import ExerciseTimer from './ExerciseTimer'
@@ -143,7 +144,7 @@ export default function ExerciseDetail({ id }: { id: string }) {
 		setIsSaving(false)
 		setIsFinished(false)
 		setResetCount(prev => prev + 1)
-		setProgress(prev => ({ ...prev, currentValue: 0 }))
+		setProgress((prev: any) => ({ ...prev, currentValue: 0 }))
 		if (playerRef.current) {
 			playerRef.current.seekTo(0)
 		}
@@ -380,12 +381,12 @@ export default function ExerciseDetail({ id }: { id: string }) {
 								</p>
 								<p>
 									<span className='font-semibold'>Тип:</span>{' '}
-									{entry.type === 'reps' ? 'Повторення' : 'Час'}
+									{entry.type === ExerciseType.REPS ? 'Повторення' : 'Час'}
 								</p>
 								<p>
 									<span className='font-semibold'>Значення:</span> {entry.value}{' '}
 									/ {entry.targetValue}{' '}
-									{entry.type === 'reps' ? 'повторень' : 'секунд'}
+									{entry.type === ExerciseType.TIME ? 'повторень' : 'секунд'}
 								</p>
 								<p>
 									<span className='font-semibold'>Статус:</span>{' '}
