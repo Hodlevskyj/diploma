@@ -14,6 +14,19 @@ export enum GoalType {
   // FLEXIBILITY = 'FLEXIBILITY',
 }
 
+export enum ExerciseCategory {
+  STRENGTH = 'STRENGTH',
+  CARDIO = 'CARDIO',
+  FLEXIBILITY = 'FLEXIBILITY',
+  BALANCE = 'BALANCE',
+}
+
+export enum DifficultyLevel {
+  BEGINNER = 'BEGINNER',
+  INTERMEDIATE = 'INTERMEDIATE',
+  ADVANCED = 'ADVANCED',
+}
+
 export enum PlanStatus {
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
@@ -97,4 +110,58 @@ export class UpdateExerciseInPlanDto {
   @IsOptional()
   @Min(0)
   restDuration?: number;
+}
+
+export class CreateExerciseDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  muscleGroup: string;
+
+  @IsNumber()
+  @IsOptional()
+  exerciseCategoryId?: number;
+
+  @IsString()
+  @IsOptional()
+  difficulty?: string;
+
+  @IsString()
+  @IsOptional()
+  videoUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsOptional()
+  equipment?: string;
+
+  @IsNumber()
+  @IsOptional()
+  duration?: number;
+
+  @IsNumber()
+  @IsOptional()
+  reps?: number;
+
+  @IsNumber()
+  @IsOptional()
+  restDuration?: number;
+
+  @IsNumber()
+  @IsOptional()
+  calories?: number;
+
+  @IsString()
+  @IsOptional()
+  intensity?: string;
+
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
 }
