@@ -1,9 +1,47 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreateExerciseDto } from '../planexercise/plansexercise.dto';
 import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class ExerciseService {
   constructor(private prisma: PrismaService) {}
+
+  async createExercise(userId: number, dto: CreateExerciseDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new NotFoundException('Користувача не знайдено');
+    }
+
+    if (dto.exerciseCategoryId) {
+      const category = await this.prisma.exerciseCategory.findUnique({
+        where: { id: dto.exerciseCategoryId },
+      });
+      if (!category) {
+        throw new NotFoundException('Категорію не знайдено');
+      }
+    }
+
+    return this.prisma.exercise.create({
+      data: {
+        name: dto.name,
+        muscleGroup: dto.muscleGroup,
+        difficulty: dto.difficulty,
+        description: dto.description,
+        imageUrl: dto.imageUrl,
+        videoUrl: dto.videoUrl,
+        user: { connect: { id: userId } },
+        ...(dto.exerciseCategoryId && {
+          exerciseCategory: { connect: { id: dto.exerciseCategoryId } },
+        }),
+      },
+      include: {
+        exerciseCategory: true,
+        user: true,
+      },
+    });
+  }
 
   async getExerciseById(id: number) {
     return this.prisma.exercise.findUnique({
@@ -19,23 +57,6 @@ export class ExerciseService {
         : undefined,
       include: { exerciseCategory: true },
     });
-  }
-
-  async createExercise(data: {
-    name: string;
-    muscleGroup: string;
-    exerciseCategoryId?: number;
-    difficulty?: string;
-    videoUrl?: string;
-    description?: string;
-    equipment?: string;
-    duration?: number;
-    reps?: number;
-    restDuration?: number;
-    calories?: number;
-    intensity?: string;
-  }) {
-    return this.prisma.exercise.create({ data });
   }
 
   async updateExercise(
@@ -79,6 +100,7 @@ export class ExerciseService {
     completed: boolean;
     pauseCount: number;
     resetCount: number;
+    workoutPlanId?: number;
   }) {
     try {
       const progress = await this.prisma.trackedExercise.create({
@@ -91,6 +113,7 @@ export class ExerciseService {
           completed: data.completed,
           pauseCount: data.pauseCount,
           resetCount: data.resetCount,
+          workoutPlanId: data.workoutPlanId,
           completedAt: new Date(),
         },
       });

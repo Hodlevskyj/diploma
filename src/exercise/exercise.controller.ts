@@ -8,14 +8,23 @@ import {
   Post,
   Put,
   Query,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreateExerciseDto } from '../planexercise/plansexercise.dto';
 import { ExerciseService } from './exercise.service';
 
 @Controller('exercises')
 export class ExerciseController {
   constructor(private exerciseService: ExerciseService) {}
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  async createExercise(@Request() req, @Body() dto: CreateExerciseDto) {
+    const userId = req.user.userId;
+    return this.exerciseService.createExercise(userId, dto);
+  }
 
   @Get()
   async getAllExercises(@Query('category') category?: string) {
@@ -40,6 +49,7 @@ export class ExerciseController {
       completed: boolean;
       pauseCount: number;
       resetCount: number;
+      workoutPlanId?: number;
     },
   ) {
     return this.exerciseService.trackProgress(data);
@@ -53,28 +63,6 @@ export class ExerciseController {
     @Query('endDate') endDate?: string,
   ) {
     return this.exerciseService.getUserProgress(userId, startDate, endDate);
-  }
-
-  @Post()
-  @UseGuards(JwtAuthGuard)
-  async createExercise(
-    @Body()
-    data: {
-      name: string;
-      muscleGroup: string;
-      exerciseCategoryId?: number;
-      difficulty?: string;
-      videoUrl?: string;
-      description?: string;
-      equipment?: string;
-      duration?: number;
-      reps?: number;
-      restDuration?: number;
-      calories?: number;
-      intensity?: string;
-    },
-  ) {
-    return this.exerciseService.createExercise(data);
   }
 
   @Put(':id')
