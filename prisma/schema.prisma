@@ -39,6 +39,8 @@ model User {
   WorkoutCompletion  WorkoutPlanCompletion[]
   TrackedExercise    TrackedExercise[]
   Exercise           Exercise[]
+  FavoriteExercise   FavoriteExercise[]
+  FavoritePlan       FavoritePlan[]
 }
 
 enum Role {
@@ -138,6 +140,7 @@ model Exercise {
   TrackedExercise    TrackedExercise[]
   userId             Int
   user               User                    @relation(fields: [userId], references: [id])
+  FavoriteExercise   FavoriteExercise[]
 
   @@index([userId])
   @@index([exerciseCategoryId])
@@ -157,6 +160,7 @@ model WorkoutPlan {
   completions      WorkoutPlanCompletion[]
   schedules        WorkoutPlanSchedule[]
   trackedExercises TrackedExercise[]
+  FavoritePlan     FavoritePlan[]
 }
 
 model WorkoutPlanExercise {
@@ -187,4 +191,26 @@ model WorkoutPlanSchedule {
   workoutPlanId Int
   workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id])
   date          DateTime
+}
+
+model FavoriteExercise {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  exerciseId Int
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, exerciseId])
+}
+
+model FavoritePlan {
+  id        Int         @id @default(autoincrement())
+  user      User        @relation(fields: [userId], references: [id])
+  userId    Int
+  plan      WorkoutPlan @relation(fields: [planId], references: [id])
+  planId    Int
+  createdAt DateTime    @default(now())
+
+  @@unique([userId, planId])
 }
