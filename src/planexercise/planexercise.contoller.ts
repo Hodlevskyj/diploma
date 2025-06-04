@@ -45,7 +45,7 @@ export class PlansExerciseController {
     @Request() req,
   ) {
     const userId = req.user.userId;
-    return this.workoutPlanService.update(id, userId, dto);
+    return this.workoutPlanService.updatePlan(id, userId, dto);
   }
 
   @Delete(':id')

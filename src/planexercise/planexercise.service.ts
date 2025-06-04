@@ -39,7 +39,7 @@ export class PlanExerciseService {
     return plan;
   }
 
-  async update(id: number, userId: number, dto: UpdatePlanDto) {
+  async updatePlan(id: number, userId: number, dto: UpdatePlanDto) {
     await this.findOne(id, userId);
     return this.prisma.workoutPlan.update({
       where: { id },
@@ -201,4 +201,21 @@ export class PlanExerciseService {
     }
     return { success: true };
   }
+
+  // async updatePlan(id: number, userId: number, dto: UpdatePlanDto) {
+  //   // Перевіряємо, чи план належить користувачу
+  //   const plan = await this.prisma.workoutPlan.findFirst({
+  //     where: { id, userId },
+  //   });
+  //   if (!plan) throw new NotFoundException('Workout plan not found');
+
+  //   // Оновлюємо тільки дозволені поля (name, description)
+  //   return this.prisma.workoutPlan.update({
+  //     where: { id },
+  //     data: {
+  //       name: dto.name,
+  //       description: dto.description,
+  //     },
+  //   });
+  // }
 }
