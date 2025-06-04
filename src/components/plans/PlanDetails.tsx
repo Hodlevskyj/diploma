@@ -6,11 +6,13 @@ import {
 	getPlan,
 	removeExerciseFromPlan,
 	updateExerciseInPlan,
+	updatePlan,
 } from '@/lib/api'
 import { useState } from 'react'
 import { WorkoutPlan, WorkoutPlanExercise } from '../../types/planexercise'
 import { EditExerciseInPlanModal } from '../exercise/EditExerciseInPlanModal'
 import { AddExerciseToPlanModal } from './AddExerciseToPlanModal'
+import { EditPlanModal } from './EditPlanModal'
 
 type PlanDetailsProps = {
 	plan: WorkoutPlan
@@ -44,6 +46,9 @@ export default function PlanDetails({
 	const [error, setError] = useState<string | null>(null)
 	const [deletingId, setDeletingId] = useState<number | null>(null)
 	const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+
+	const [editOpen, setEditOpen] = useState(false)
+	const [isSaving, setIsSaving] = useState(false)
 
 	const exercises = Array.isArray(planState.exercises)
 		? planState.exercises.slice().sort((a, b) => a.order - b.order)
@@ -112,11 +117,25 @@ export default function PlanDetails({
 		}
 	}
 
+	const handleSavePlan = async (data: {
+		name: string
+		description?: string
+	}) => {
+		setIsSaving(true)
+		try {
+			await updatePlan(planState.id, data)
+			await fetchPlan()
+			setEditOpen(false)
+		} finally {
+			setIsSaving(false)
+		}
+	}
+
 	return (
 		<div className='max-w-2xl mx-auto'>
 			<div className='flex justify-between items-center mb-4'>
 				<h2 className='text-2xl font-bold'>{planState.name}</h2>
-				<Button onClick={onEdit}>Редагувати план</Button>
+				<Button onClick={() => setEditOpen(true)}>Редагувати план</Button>
 			</div>
 			<div className='mb-2 text-muted-foreground'>{planState.description}</div>
 			<div className='mb-4'>
@@ -140,6 +159,13 @@ export default function PlanDetails({
 					onSubmit={handleEditExerciseSubmit}
 				/>
 			)}
+			<EditPlanModal
+				open={editOpen}
+				onOpenChange={setEditOpen}
+				plan={planState}
+				onSubmit={handleSavePlan}
+				isSaving={isSaving}
+			/>
 			{error && <div className='text-red-500 mb-2'>{error}</div>}
 			<h3 className='text-xl font-semibold mb-2'>Вправи у плані</h3>
 			{loading ? (
