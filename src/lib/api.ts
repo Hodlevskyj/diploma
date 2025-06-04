@@ -166,3 +166,17 @@ export async function savePartialProgress(
 	if (!res.ok) throw new Error('Failed to save partial progress')
 	return res.json()
 }
+
+export async function updatePlan(
+	id: number,
+	data: { name?: string; description?: string }
+) {
+	const res = await fetch(`http://localhost:4000/plans/${id}`, {
+		method: 'PATCH',
+		headers: getAuthHeaders(),
+		credentials: 'include',
+		body: JSON.stringify(data),
+	})
+	if (!res.ok) throw new Error('Не вдалося оновити план')
+	return res.json()
+}
