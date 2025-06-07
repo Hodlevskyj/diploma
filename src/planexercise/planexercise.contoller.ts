@@ -12,6 +12,11 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreatePlanDto } from './dto/createPlan.dto';
+import {
+  CreateWorkoutDayDto,
+  CreateWorkoutPlanExerciseDto,
+  GeneratePlanDto,
+} from './dto/generatePlan.dto';
 import { PlanExerciseService } from './planexercise.service';
 import { UpdatePlanDto } from './plansexercise.dto';
 
@@ -157,5 +162,63 @@ export class PlansExerciseController {
   ) {
     const userId = req.user.userId;
     return this.workoutPlanService.savePartialProgress(planId, userId, body);
+  }
+
+  @Post('generate')
+  async generatePlan(@Body() dto: GeneratePlanDto, @Request() req) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.generatePlan(userId, dto);
+  }
+  @Get()
+  async getPlans(@Request() req) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.findAll(userId);
+  }
+
+  @Post(':planId/days')
+  async createDay(
+    @Param('planId', ParseIntPipe) planId: number,
+    @Body() dto: CreateWorkoutDayDto,
+    @Request() req,
+  ) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.createDay(userId, planId, dto);
+  }
+
+  @Delete(':planId/days/:dayId')
+  async deleteDay(
+    @Param('planId', ParseIntPipe) planId: number,
+    @Param('dayId', ParseIntPipe) dayId: number,
+    @Request() req,
+  ) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.deleteDay(userId, planId, dayId);
+  }
+
+  @Post(':planId/days/:dayId/exercises')
+  async addExerciseToDay(
+    @Param('planId', ParseIntPipe) planId: number,
+    @Param('dayId', ParseIntPipe) dayId: number,
+    @Body() dto: CreateWorkoutPlanExerciseDto,
+    @Request() req,
+  ) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.addExerciseToDay(userId, planId, dayId, dto);
+  }
+
+  @Delete(':planId/days/:dayId/exercises/:exerciseId')
+  async removeExerciseFromDay(
+    @Param('planId', ParseIntPipe) planId: number,
+    @Param('dayId', ParseIntPipe) dayId: number,
+    @Param('exerciseId', ParseIntPipe) exerciseId: number,
+    @Request() req,
+  ) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.removeExerciseFromDay(
+      userId,
+      planId,
+      dayId,
+      exerciseId,
+    );
   }
 }

@@ -1,6 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreatePlanDto } from './dto/createPlan.dto';
+import {
+  CreateWorkoutDayDto,
+  CreateWorkoutPlanExerciseDto,
+  GeneratePlanDto,
+} from './dto/generatePlan.dto';
 import { UpdatePlanDto } from './dto/updatePlan.dto';
 
 @Injectable()
@@ -81,15 +86,13 @@ export class PlanExerciseService {
     exerciseId: number,
     userId: number,
   ) {
-    //перевірка, що план належить користувачу
     const plan = await this.findOne(planId, userId);
     if (!plan) throw new NotFoundException('Workout plan not found');
 
-    //видаляємо зв'язок вправи з планом
     return this.prisma.workoutPlanExercise.deleteMany({
       where: {
         workoutPlanId: planId,
-        id: exerciseId, // id — це id з таблиці WorkoutPlanExercise
+        id: exerciseId,
       },
     });
   }
@@ -105,11 +108,9 @@ export class PlanExerciseService {
       restDuration?: number;
     },
   ) {
-    //перевірка, що план належить користувачу
     const plan = await this.findOne(planId, userId);
     if (!plan) throw new NotFoundException('Workout plan not found');
 
-    //оновлення WorkoutPlanExercise
     return this.prisma.workoutPlanExercise.update({
       where: { id: exerciseId, workoutPlanId: planId },
       data: dto,
@@ -149,7 +150,6 @@ export class PlanExerciseService {
         },
       });
     }
-    //оновлюємо статус плану
     await this.prisma.workoutPlan.update({
       where: { id: planId },
       data: { status: body.status },
@@ -202,20 +202,74 @@ export class PlanExerciseService {
     return { success: true };
   }
 
-  // async updatePlan(id: number, userId: number, dto: UpdatePlanDto) {
-  //   // Перевіряємо, чи план належить користувачу
-  //   const plan = await this.prisma.workoutPlan.findFirst({
-  //     where: { id, userId },
-  //   });
-  //   if (!plan) throw new NotFoundException('Workout plan not found');
+  async generatePlan(userId: number, dto: GeneratePlanDto) {
+    const plan = await this.prisma.workoutPlan.create({
+      data: {
+        userId,
+        name: `Авто-план (${dto.fitnessGoal})`,
+        fitnessGoal: dto.fitnessGoal,
+        status: 'IN_PROGRESS',
+        WorkoutDay: {
+          create: Array.from({ length: dto.daysPerWeek }).map((_, i) => ({
+            dayNumber: i + 1,
+            name: `День ${i + 1}`,
+            exercises: {
+              create: [],
+            },
+          })),
+        },
+      },
+      include: {
+        WorkoutDay: {
+          include: { exercises: true },
+        },
+      },
+    });
+    return plan;
+  }
 
-  //   // Оновлюємо тільки дозволені поля (name, description)
-  //   return this.prisma.workoutPlan.update({
-  //     where: { id },
-  //     data: {
-  //       name: dto.name,
-  //       description: dto.description,
-  //     },
-  //   });
-  // }
+  async createDay(userId: number, planId: number, dto: CreateWorkoutDayDto) {
+    return this.prisma.workoutDay.create({
+      data: {
+        workoutPlanId: planId,
+        ...dto,
+      },
+    });
+  }
+
+  async deleteDay(userId: number, planId: number, dayId: number) {
+    return this.prisma.workoutDay.delete({
+      where: { id: dayId },
+    });
+  }
+
+  async addExerciseToDay(
+    userId: number,
+    planId: number,
+    dayId: number,
+    dto: CreateWorkoutPlanExerciseDto,
+  ) {
+    return this.prisma.workoutPlanExercise.create({
+      data: {
+        workoutPlanId: planId,
+        workoutDayId: dayId,
+        ...dto,
+      },
+    });
+  }
+
+  async removeExerciseFromDay(
+    userId: number,
+    planId: number,
+    dayId: number,
+    exerciseId: number,
+  ) {
+    return this.prisma.workoutPlanExercise.deleteMany({
+      where: {
+        workoutPlanId: planId,
+        workoutDayId: dayId,
+        exerciseId,
+      },
+    });
+  }
 }
