@@ -1,12 +1,27 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import useAuthRedirect from '@/hooks/useAuthRedirect'
+import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import GoogleLoginButton from '../button/GoogleLoginButton'
 import StravaLoginButton from '../button/StravaLoginButton'
 
-export default function RegisterForm() {
+export default function RegisterForm({
+	className,
+	...props
+}: React.ComponentProps<'div'>) {
 	const router = useRouter()
 	useAuthRedirect()
 	const [formData, setFormData] = useState({
@@ -18,15 +33,10 @@ export default function RegisterForm() {
 	const [loading, setLoading] = useState(false)
 	const [verificationSent, setVerificationSent] = useState(false)
 
-	const handleGoogleLogin = () => {
-		window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/google`
-	}
-
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		setError('')
 		setLoading(true)
-
 		try {
 			const response = await fetch(
 				`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/register`,
@@ -37,12 +47,10 @@ export default function RegisterForm() {
 					body: JSON.stringify(formData),
 				}
 			)
-
 			if (!response.ok) {
 				const data = await response.json()
 				throw new Error(data.message)
 			}
-
 			setVerificationSent(true)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Registration failed')
@@ -53,109 +61,135 @@ export default function RegisterForm() {
 
 	if (verificationSent) {
 		return (
-			<div className='min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8'>
-				<div className='max-w-md w-full space-y-8'>
-					<div className='text-center'>
-						<h2 className='text-3xl font-extrabold text-gray-900'>
-							Check your email
-						</h2>
-						<p className='mt-2 text-sm text-gray-600'>
+			<div
+				className={cn(
+					'flex flex-col gap-6 items-center justify-center min-h-screen',
+					className
+				)}
+				{...props}
+			>
+				<Card className='w-full max-w-md'>
+					<CardHeader className='text-center'>
+						<CardTitle className='text-2xl'>Check your email</CardTitle>
+						<CardDescription>
 							We've sent a verification link to {formData.email}.<br />
 							Please check your inbox and click the link to verify your account.
-						</p>
-						<p className='mt-4 text-sm text-gray-500'>
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div className='text-center text-sm text-gray-500'>
 							Didn't receive the email?{' '}
 							<button
 								onClick={() => setVerificationSent(false)}
-								className='text-indigo-600 hover:text-indigo-500'
+								className='text-indigo-600 hover:text-indigo-500 underline'
 							>
 								Try again
 							</button>
-						</p>
-					</div>
-				</div>
+						</div>
+					</CardContent>
+				</Card>
 			</div>
 		)
 	}
 
 	return (
-		<div className='min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8'>
-			<div className='max-w-md w-full space-y-8'>
-				<div>
-					<h2 className='mt-6 text-center text-3xl font-extrabold text-gray-900'>
-						Create your account
-					</h2>
-				</div>
-				<form className='mt-8 space-y-6' onSubmit={handleSubmit}>
-					{error && (
-						<div className='bg-red-50 text-red-500 p-3 rounded'>{error}</div>
-					)}
-					<div className='rounded-md shadow-sm space-y-4'>
-						<input
-							type='text'
-							required
-							className='appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
-							placeholder='Full name'
-							value={formData.name}
-							onChange={e => setFormData({ ...formData, name: e.target.value })}
-						/>
-						<input
-							type='email'
-							required
-							className='appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
-							placeholder='Email address'
-							value={formData.email}
-							onChange={e =>
-								setFormData({ ...formData, email: e.target.value })
-							}
-						/>
-						<input
-							type='password'
-							required
-							className='appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
-							placeholder='Password'
-							value={formData.password}
-							onChange={e =>
-								setFormData({ ...formData, password: e.target.value })
-							}
-						/>
-					</div>
-
-					<button
-						type='button'
-						onClick={handleGoogleLogin}
-						className='w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-					>
-						<img
-							className='h-5 w-5 mr-2'
-							src='https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg'
-							alt='Google logo'
-						/>
-						Sign up with Google
-					</button>
-					<StravaLoginButton />
-
-					<div>
-						<button
-							type='submit'
-							disabled={loading}
-							className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-								loading ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'
-							}`}
-						>
-							{loading ? 'Creating account...' : 'Create account'}
-						</button>
-					</div>
-
-					<div className='text-sm text-center'>
-						<Link
-							href='/login'
-							className='text-indigo-600 hover:text-indigo-500'
-						>
-							Already have an account? Sign in
-						</Link>
-					</div>
-				</form>
+		<div
+			className={cn(
+				'flex flex-col gap-6 items-center justify-center min-h-screen',
+				className
+			)}
+			{...props}
+		>
+			<Card className='w-full max-w-md'>
+				<CardHeader className='text-center'>
+					<CardTitle className='text-2xl'>Create your account</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<form className='grid gap-6' onSubmit={handleSubmit}>
+						{error && (
+							<div className='bg-red-50 text-red-500 p-3 rounded text-sm'>
+								{error}
+							</div>
+						)}
+						<div className='flex flex-col gap-4'>
+							<GoogleLoginButton />
+							<StravaLoginButton />
+						</div>
+						<div className='relative text-center text-sm my-2'>
+							<span className='bg-card px-2 relative z-10'>
+								Or continue with
+							</span>
+							<div className='absolute left-0 right-0 top-1/2 border-t border-border -z-0'></div>
+						</div>
+						<div className='grid gap-4'>
+							<div className='grid gap-2'>
+								<Label htmlFor='name'>Full name</Label>
+								<Input
+									id='name'
+									type='text'
+									placeholder='Your name'
+									required
+									value={formData.name}
+									onChange={e =>
+										setFormData({ ...formData, name: e.target.value })
+									}
+									disabled={loading}
+								/>
+							</div>
+							<div className='grid gap-2'>
+								<Label htmlFor='email'>Email</Label>
+								<Input
+									id='email'
+									type='email'
+									placeholder='m@example.com'
+									required
+									value={formData.email}
+									onChange={e =>
+										setFormData({ ...formData, email: e.target.value })
+									}
+									disabled={loading}
+								/>
+							</div>
+							<div className='grid gap-2'>
+								<Label htmlFor='password'>Password</Label>
+								<Input
+									id='password'
+									type='password'
+									placeholder='Password'
+									required
+									value={formData.password}
+									onChange={e =>
+										setFormData({ ...formData, password: e.target.value })
+									}
+									disabled={loading}
+								/>
+							</div>
+							<Button type='submit' className='w-full' disabled={loading}>
+								{loading ? 'Creating account...' : 'Create account'}
+							</Button>
+						</div>
+						<div className='text-center text-sm'>
+							Already have an account?{' '}
+							<Link
+								href='/login'
+								className='underline underline-offset-4 text-indigo-600 hover:text-indigo-500'
+							>
+								Sign in
+							</Link>
+						</div>
+					</form>
+				</CardContent>
+			</Card>
+			<div className='text-muted-foreground text-center text-xs'>
+				By clicking continue, you agree to our{' '}
+				<a href='#' className='underline underline-offset-4'>
+					Terms of Service
+				</a>{' '}
+				and{' '}
+				<a href='#' className='underline underline-offset-4'>
+					Privacy Policy
+				</a>
+				.
 			</div>
 		</div>
 	)

@@ -7,7 +7,21 @@ import { useState } from 'react'
 import GoogleLoginButton from '../button/GoogleLoginButton'
 import StravaLoginButton from '../button/StravaLoginButton'
 
-export default function LoginForm() {
+import { Button } from '@/components/ui/button'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+
+export default function LoginForm({
+	className,
+	...props
+}: React.ComponentProps<'div'>) {
 	const { login } = useAuth()
 	const router = useRouter()
 	const [formData, setFormData] = useState({
@@ -52,8 +66,6 @@ export default function LoginForm() {
 			} else {
 				router.push('/dashboard')
 			}
-			router.push('/dashboard')
-			console.log('Updating user with:', data)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Login failed')
 		} finally {
@@ -62,65 +74,93 @@ export default function LoginForm() {
 	}
 
 	return (
-		<div className='min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8'>
-			<div className='max-w-md w-full space-y-8'>
-				<div>
-					<h2 className='mt-6 text-center text-3xl font-extrabold text-gray-900'>
-						Sign in to your account
-					</h2>
-				</div>
-				<form className='mt-8 space-y-6' onSubmit={handleSubmit}>
-					{error && (
-						<div className='bg-red-50 text-red-500 p-3 rounded'>{error}</div>
-					)}
-					<div className='rounded-md shadow-sm space-y-4'>
-						<input
-							type='email'
-							required
-							className='appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
-							placeholder='Email address'
-							value={formData.email}
-							onChange={e =>
-								setFormData({ ...formData, email: e.target.value })
-							}
-						/>
-						<input
-							type='password'
-							required
-							className='appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
-							placeholder='Password'
-							value={formData.password}
-							onChange={e =>
-								setFormData({ ...formData, password: e.target.value })
-							}
-						/>
-					</div>
-
-					<div>
-						<button
-							type='submit'
-							disabled={loading}
-							className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-								loading ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'
-							}`}
-						>
-							{loading ? 'Signing in...' : 'Sign in'}
-						</button>
-					</div>
-					<GoogleLoginButton />
-					<div>
-						<StravaLoginButton />
-					</div>
-
-					<div className='text-sm text-center'>
-						<Link
-							href='/register'
-							className='text-indigo-600 hover:text-indigo-500'
-						>
-							Don't have an account? Sign up
-						</Link>
-					</div>
-				</form>
+		<div
+		// className={cn(
+		// 	'flex flex-col gap-6 items-center justify-center min-h-screen',
+		// 	className
+		// )}
+		// {...props}
+		>
+			<Card className='w-full max-w-md'>
+				<CardHeader className='text-center'>
+					<CardTitle className='text-2xl'>Welcome back</CardTitle>
+					<CardDescription>
+						Login with your Google or Strava account
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<form className='grid gap-6' onSubmit={handleSubmit}>
+						{error && (
+							<div className='bg-red-50 text-red-500 p-3 rounded text-sm'>
+								{error}
+							</div>
+						)}
+						<div className='flex flex-col gap-4'>
+							<GoogleLoginButton />
+							<StravaLoginButton />
+						</div>
+						<div className='relative text-center text-sm my-2'>
+							<span className='bg-card px-2 relative z-10'>
+								Or continue with
+							</span>
+							<div className='absolute left-0 right-0 top-1/2 border-t border-border -z-0'></div>
+						</div>
+						<div className='grid gap-4'>
+							<div className='grid gap-2'>
+								<Label htmlFor='email'>Email</Label>
+								<Input
+									id='email'
+									type='email'
+									placeholder='m@example.com'
+									required
+									value={formData.email}
+									onChange={e =>
+										setFormData({ ...formData, email: e.target.value })
+									}
+									disabled={loading}
+								/>
+							</div>
+							<div className='grid gap-2'>
+								<div className='flex items-center'>
+									<Label htmlFor='password'>Password</Label>
+								</div>
+								<Input
+									id='password'
+									type='password'
+									required
+									value={formData.password}
+									onChange={e =>
+										setFormData({ ...formData, password: e.target.value })
+									}
+									disabled={loading}
+								/>
+							</div>
+							<Button type='submit' className='w-full' disabled={loading}>
+								{loading ? 'Signing in...' : 'Sign in'}
+							</Button>
+						</div>
+						<div className='text-center text-sm'>
+							Don't have an account?{' '}
+							<Link
+								href='/register'
+								className='underline underline-offset-4 text-indigo-600 hover:text-indigo-500'
+							>
+								Sign up
+							</Link>
+						</div>
+					</form>
+				</CardContent>
+			</Card>
+			<div className='text-muted-foreground text-center text-xs'>
+				By clicking continue, you agree to our{' '}
+				<a href='#' className='underline underline-offset-4'>
+					Terms of Service
+				</a>{' '}
+				and{' '}
+				<a href='#' className='underline underline-offset-4'>
+					Privacy Policy
+				</a>
+				.
 			</div>
 		</div>
 	)
