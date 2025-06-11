@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
-import { WorkoutPlan } from '@/types/workout'
+import { WorkoutPlan } from '@/types/planexercise'
 import Link from 'next/link'
 
 interface PlanListProps {

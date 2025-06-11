@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Exercise, ExerciseProgress } from '../../types/workout'
+import { Exercise, ExerciseProgress } from '../../types/planexercise'
 
 interface ExerciseSettingsProps {
 	exercise: Exercise
@@ -14,17 +14,16 @@ const ExerciseSettings = ({
 	const [settingsType, setSettingsType] = useState<'reps' | 'time'>(
 		exercise.duration ? 'time' : 'reps'
 	)
-
 	const handleTypeChange = (type: 'reps' | 'time') => {
 		setSettingsType(type)
+		console.log('Setting type to:', type)
 		onSettingsChange({
 			type,
-			targetValue: type === 'reps' ? 10 : 30,
+			targetValue: type === 'reps' ? 5 : 15,
 			currentValue: 0,
 			isActive: false,
 		})
 	}
-
 	const handleValueChange = (value: number) => {
 		onSettingsChange({
 			type: settingsType,

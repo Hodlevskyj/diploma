@@ -22,33 +22,6 @@ import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { Exercise } from '../../../types/planexercise'
 
-// export type ExerciseCategory = {
-// 	id: number
-// 	name: string
-// 	createdAt: string
-// 	updatedAt: string
-// }
-
-// export type Exercise = {
-// 	id: number
-// 	name: string
-// 	muscleGroup: string
-// 	exerciseCategory?: ExerciseCategory | null
-// 	exerciseCategoryId?: number | null
-// 	difficulty?: string | null
-// 	videoUrl?: string | null
-// 	description?: string | null
-// 	equipment?: string | null
-// 	duration?: number | null
-// 	reps?: number | null
-// 	restDuration?: number | null
-// 	calories?: number | null
-// 	intensity?: string | null
-// 	imageUrl?: string | null
-// 	createdAt: string
-// 	updatedAt: string
-// 	userId: number
-// }
 export enum ExerciseCategory {
 	STRENGTH = 'STRENGTH',
 	CARDIO = 'CARDIO',
@@ -132,10 +105,17 @@ export default function ExercisesPage() {
 	const loadCategories = async () => {
 		if (access !== 'allowed') return
 		setLoading(true)
-		adminGetCategories()
-			.then(setCategories)
-			.catch(err => setError(err.message))
-			.finally(() => setLoading(false))
+		try {
+			// Використовуємо функцію з API клієнта
+			const data = await adminGetCategories()
+			setCategories(data)
+		} catch (err) {
+			setError(
+				err instanceof Error ? err.message : 'Помилка при отриманні категорій'
+			)
+		} finally {
+			setLoading(false)
+		}
 	}
 
 	useEffect(() => {
@@ -626,112 +606,3 @@ export default function ExercisesPage() {
 		</SidebarProvider>
 	)
 }
-
-// 'use client'
-// import { Button } from '@/components/ui/button'
-// import { adminGetCategories, adminGetExercises } from '@/lib/api'
-// import { useEffect, useState } from 'react'
-// import { Exercise } from '../../../types/planexercise'
-
-// type NewExercise = {
-// 	name: string
-// 	muscleGroup: string
-// 	difficulty?: string
-// 	videoUrl?: string
-// 	description?: string
-// 	equipment?: string
-// 	exerciseCategoryId?: number | null
-// 	category: string
-// }
-
-// type CategoryType = {
-// 	id: number
-// 	name: string
-// 	createdAt: string
-// 	updatedAt: string
-// }
-
-// export default function ExercisesPage() {
-// 	const [exercises, setExercises] = useState<Exercise[]>([])
-// 	const [loading, setLoading] = useState(true)
-// 	const [error, setError] = useState<string | null>(null)
-// 	const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
-// 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-// 	const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(
-// 		null
-// 	)
-// 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-// 	const [isProcessing, setIsProcessing] = useState(false)
-// 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-// 	const [newExercise, setNewExercise] = useState<NewExercise>({
-// 		name: '',
-// 		muscleGroup: '',
-// 		difficulty: 'Medium',
-// 		description: '',
-// 		category: '',
-// 	})
-// 	const [categories, setCategories] = useState<CategoryType[]>([])
-
-// 	// Завантаження вправ
-// 	const loadExercises = () => {
-// 		setLoading(true)
-// 		adminGetExercises()
-// 			.then(setExercises)
-// 			.catch(err => setError(err.message))
-// 			.finally(() => setLoading(false))
-// 	}
-
-// 	// Завантаження категорій
-// 	const loadCategories = async () => {
-// 		setLoading(true)
-// 		adminGetCategories()
-// 			.then(setCategories)
-// 			.catch(err => setError(err.message))
-// 			.finally(() => setLoading(false))
-// 	}
-
-// 	useEffect(() => {
-// 		loadExercises()
-// 		loadCategories()
-// 	}, [])
-
-// 	// Функція оновлення вправи
-// 	const handleUpdateExercise = async (e: React.FormEvent) => {
-// 		// Код функції залишається без змін
-// 	}
-
-// 	// Функція створення вправи
-// 	const handleCreateExercise = async (e: React.FormEvent) => {
-// 		// Код функції залишається без змін
-// 	}
-
-// 	// Функція видалення вправи
-// 	const handleDeleteExercise = async () => {
-// 		// Код функції залишається без змін
-// 	}
-
-// 	// Відображення станів завантаження
-// 	if (loading) {
-// 		return <div className='p-8 text-center'>Завантаження вправ...</div>
-// 	}
-// 	if (error) {
-// 		return (
-// 			<div className='p-8 text-center text-red-600 font-bold'>
-// 				Помилка: {error}
-// 			</div>
-// 		)
-// 	}
-
-// 	return (
-// 		<div className='flex flex-1 flex-col p-6'>
-// 			<div className='flex justify-between items-center mb-6'>
-// 				<h1 className='text-2xl font-bold'>Вправи</h1>
-// 				<Button onClick={() => setIsCreateDialogOpen(true)}>
-// 					Додати нову вправу
-// 				</Button>
-// 			</div>
-
-// 			{/* Решта коду залишається без змін */}
-// 		</div>
-// 	)
-// }

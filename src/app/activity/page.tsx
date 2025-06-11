@@ -1,10 +1,13 @@
 'use client'
 
 import Activities from '@/components/activity/Activities'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/context/AuthContext'
+import { ArrowLeft } from 'lucide-react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -64,6 +67,14 @@ export default function ActivityPage() {
 
 	return (
 		<div className='container mx-auto p-4 space-y-6'>
+			<div className='flex items-center mb-2'>
+				<Link href='/dashboard'>
+					<Button variant='outline' size='sm' className='mr-2'>
+						<ArrowLeft className='h-4 w-4 mr-2' />
+						Назад до дашборду
+					</Button>
+				</Link>
+			</div>
 			<Card>
 				<CardHeader>
 					<CardTitle>Активності</CardTitle>

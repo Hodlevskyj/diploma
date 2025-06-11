@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/card'
 import { Clock, Dumbbell } from 'lucide-react'
 import Link from 'next/link'
-import FavoriteButton from '../button/FavoriteExerciseButton'
 
 interface ExerciseCategory {
 	id: number
@@ -41,11 +40,6 @@ export function ExerciseCard({
 			<CardHeader className='pb-2'>
 				<div className='flex justify-between items-start'>
 					<CardTitle className='text-lg'>{exercise.name}</CardTitle>
-					<FavoriteButton
-						exerciseId={exercise.id}
-						initialFavorite={isFavorite}
-						onChange={onFavoriteChange}
-					/>
 				</div>
 			</CardHeader>
 			<CardContent className='flex-grow'>

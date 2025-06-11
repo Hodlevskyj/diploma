@@ -71,15 +71,32 @@ export interface WorkoutPlan {
 	}
 }
 
+// export interface TrackedExercise {
+// 	id: number
+// 	exerciseId: number
+// 	workoutPlanId: number
+// 	completed: boolean
+// 	reps?: number
+// 	duration?: number
+// 	completedAt: string
+// 	exercise: Exercise
+// }
 export interface TrackedExercise {
 	id: number
+	userId: number
 	exerciseId: number
-	workoutPlanId: number
+	type: string // або 'time' | 'reps'
+	value: number
+	targetValue: number
 	completed: boolean
-	reps?: number
-	duration?: number
+	pauseCount: number
+	resetCount: number
 	completedAt: string
-	exercise: Exercise
+}
+
+export enum ExerciseType {
+	REPS = 'reps',
+	TIME = 'time',
 }
 
 export interface FavoriteExercise {
@@ -186,4 +203,11 @@ export interface CreateExerciseDto {
 	restDuration?: number
 	imageUrl?: string
 	videoUrl?: string
+}
+
+export interface ExerciseProgress {
+	type: ExerciseType | 'reps' | 'time'
+	targetValue: number
+	currentValue: number
+	isActive: boolean
 }

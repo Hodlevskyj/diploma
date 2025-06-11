@@ -1,5 +1,4 @@
 import { SidebarLeft } from '@/components/sidebar-left'
-import { SidebarRight } from '@/components/sidebar-right'
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -40,7 +39,7 @@ export default function DashboardLayout({
 				<div>{children}</div>
 				{/* <div className='flex flex-1 flex-col gap-4 p-8'>{children}</div> */}
 			</SidebarInset>
-			<SidebarRight />
+			{/* <SidebarRight /> */}
 		</SidebarProvider>
 	)
 }
