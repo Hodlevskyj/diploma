@@ -32,7 +32,8 @@ export default function RootLayout({
 	const isAuthPage =
 		pathname === '/login' ||
 		pathname === '/register' ||
-		pathname === '/dashboard'
+		pathname.startsWith('/dashboard')
+	pathname.startsWith('/admin')
 	return (
 		<html lang='en'>
 			<body
