@@ -43,7 +43,7 @@ export default function WorkoutStats() {
 					endDate: dateRange.endDate,
 				}).toString()
 				const response = await fetch(
-					`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises/stats/${user.id}?${params}`,
+					`${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/exercises/stats/${user.id}?${params}`,
 					{ credentials: 'include' }
 				)
 				if (!response.ok) throw new Error('Failed to fetch stats')

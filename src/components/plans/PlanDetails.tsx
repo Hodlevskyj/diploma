@@ -8,6 +8,7 @@ import {
 	updateExerciseInPlan,
 	updatePlan,
 } from '@/lib/api'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { WorkoutPlan, WorkoutPlanExercise } from '../../types/planexercise'
 import { EditExerciseInPlanModal } from '../exercise/EditExerciseInPlanModal'
@@ -49,6 +50,7 @@ export default function PlanDetails({
 
 	const [editOpen, setEditOpen] = useState(false)
 	const [isSaving, setIsSaving] = useState(false)
+	const router = useRouter()
 
 	const exercises = Array.isArray(planState.exercises)
 		? planState.exercises.slice().sort((a, b) => a.order - b.order)
@@ -130,12 +132,18 @@ export default function PlanDetails({
 			setIsSaving(false)
 		}
 	}
+	const butRun = () => {
+		router.push(`/dashboard/plans/${planState.id}/run`)
+	}
 
 	return (
 		<div className='max-w-2xl mx-auto'>
 			<div className='flex justify-between items-center mb-4'>
 				<h2 className='text-2xl font-bold'>{planState.name}</h2>
-				<Button onClick={() => setEditOpen(true)}>Редагувати план</Button>
+				<div className='flex gap-4'>
+					<Button onClick={() => setEditOpen(true)}>Редагувати план</Button>
+					<Button onClick={() => butRun()}>Виконати план</Button>
+				</div>
 			</div>
 			<div className='mb-2 text-muted-foreground'>{planState.description}</div>
 			<div className='mb-4'>

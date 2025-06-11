@@ -5,9 +5,10 @@ import { useEffect } from 'react'
 
 const GoogleLoginButton = () => {
 	const router = useRouter()
+	const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 	const handleLogin = () => {
-		window.location.href = 'http://localhost:4000/auth/google'
+		window.location.href = `${API_URL}/auth/google`
 	}
 
 	useEffect(() => {

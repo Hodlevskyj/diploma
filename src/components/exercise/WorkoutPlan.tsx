@@ -70,19 +70,19 @@ export default function WorkoutPlan() {
 				const [plansResponse, exercisesResponse, categoriesResponse] =
 					await Promise.all([
 						fetch(
-							`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises/plan/${user.id}`,
+							`${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/exercises/plan/${user.id}`,
 							{
 								credentials: 'include',
 							}
 						),
 						fetch(
-							`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises?category=${selectedCategory}`,
+							`${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/exercises?category=${selectedCategory}`,
 							{
 								credentials: 'include',
 							}
 						),
 						fetch(
-							`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises/categories`,
+							`${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/exercises/categories`,
 							{
 								credentials: 'include',
 							}
@@ -114,7 +114,7 @@ export default function WorkoutPlan() {
 		if (!user) return
 		try {
 			const response = await fetch(
-				`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises/plan`,
+				`${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/exercises/plan`,
 				{
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -143,7 +143,7 @@ export default function WorkoutPlan() {
 		if (!user) return
 		try {
 			const response = await fetch(
-				`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises/plan/${workoutPlanId}`,
+				`${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/exercises/plan/${workoutPlanId}`,
 				{
 					method: 'PUT',
 					headers: { 'Content-Type': 'application/json' },
@@ -171,8 +171,8 @@ export default function WorkoutPlan() {
 		try {
 			const method = editExerciseId ? 'PUT' : 'POST'
 			const url = editExerciseId
-				? `${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises/${editExerciseId}`
-				: `${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises`
+				? `${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/exercises/${editExerciseId}`
+				: `${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/exercises`
 			const response = await fetch(url, {
 				method,
 				headers: { 'Content-Type': 'application/json' },
@@ -250,7 +250,7 @@ export default function WorkoutPlan() {
 		if (!user) return
 		try {
 			const response = await fetch(
-				`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises/${exerciseId}`,
+				`${process.env.NEXT_PUBLIC_API_BASE_URL}dashboard/exercises/${exerciseId}`,
 				{
 					method: 'DELETE',
 					credentials: 'include',
@@ -541,7 +541,7 @@ export default function WorkoutPlan() {
 								{plan.exercises.map((item: any) => (
 									<li key={item.exerciseId}>
 										<Link
-											href={`/exercises/${item.exerciseId}`}
+											href={`/dashboard/exercises/${item.exerciseId}`}
 											className='text-blue-500 hover:underline'
 										>
 											{item.exercise.name}

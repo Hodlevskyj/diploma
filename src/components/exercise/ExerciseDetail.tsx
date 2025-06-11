@@ -1,5 +1,6 @@
 'use client'
 
+import { getFavoriteExercises } from '@/lib/api'
 import { debounce } from 'lodash'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -12,6 +13,7 @@ import {
 	ExerciseType,
 	TrackedExercise,
 } from '../../types/workout'
+import FavoriteButton from '../button/FavoriteExerciseButton'
 import ExerciseCounter from './ExerciseCounter'
 import ExerciseSettings from './ExerciseSettings'
 import ExerciseTimer from './ExerciseTimer'
@@ -30,6 +32,7 @@ export default function ExerciseDetail({ id }: { id: string }) {
 	const [isSaving, setIsSaving] = useState(false)
 	const [isFinished, setIsFinished] = useState(false)
 	const [remainingTime, setRemainingTime] = useState(0)
+	const [isFavorite, setIsFavorite] = useState(false)
 
 	const router = useRouter()
 	const playerRef = useRef<ReactPlayer>(null)
@@ -46,7 +49,7 @@ export default function ExerciseDetail({ id }: { id: string }) {
 		const fetchExercise = async () => {
 			try {
 				const res = await fetch(
-					`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises/${id}`,
+					`${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/exercises/${id}`,
 					{ credentials: 'include' }
 				)
 				if (!res.ok) throw new Error('Не вдалося завантажити вправу')
@@ -70,7 +73,7 @@ export default function ExerciseDetail({ id }: { id: string }) {
 			if (!user) return
 			try {
 				const res = await fetch(
-					`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises/progress/${user.id}`,
+					`${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/exercises/progress/${user.id}`,
 					{ credentials: 'include' }
 				)
 				if (!res.ok) throw new Error('Не вдалося завантажити історію прогресу')
@@ -112,6 +115,13 @@ export default function ExerciseDetail({ id }: { id: string }) {
 		}
 		return () => clearInterval(interval)
 	}, [isRunning, isPaused, remainingTime, progress.type])
+
+	useEffect(() => {
+		if (!user || !exercise) return
+		getFavoriteExercises().then(favs => {
+			setIsFavorite(favs.some((f: any) => f.exerciseId === exercise.id))
+		})
+	}, [user, exercise])
 
 	const handleStart = useCallback(() => {
 		setIsRunning(true)
@@ -181,7 +191,7 @@ export default function ExerciseDetail({ id }: { id: string }) {
 			}
 
 			const res = await fetch(
-				`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises/track`,
+				`${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/exercises/track`,
 				{
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -207,7 +217,7 @@ export default function ExerciseDetail({ id }: { id: string }) {
 			toast.success('Виконання вправи збережено!')
 
 			const historyRes = await fetch(
-				`${process.env.NEXT_PUBLIC_API_BASE_URL}/exercises/progress/${user.id}`,
+				`${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/exercises/progress/${user.id}`,
 				{ credentials: 'include' }
 			)
 			if (!historyRes.ok) {
@@ -366,6 +376,13 @@ export default function ExerciseDetail({ id }: { id: string }) {
 					>
 						Завершити
 					</button>
+					{exercise && (
+						<FavoriteButton
+							exerciseId={exercise.id}
+							isFavorite={isFavorite}
+							onChange={fav => setIsFavorite(fav)}
+						/>
+					)}
 				</div>
 			</div>
 
@@ -409,7 +426,7 @@ export default function ExerciseDetail({ id }: { id: string }) {
 			</div>
 
 			<button
-				onClick={() => router.push('/exercises')}
+				onClick={() => router.push('/dashboard/exercises')}
 				className='mt-6 text-sm underline text-gray-600 hover:text-black'
 			>
 				← Назад до бібліотеки

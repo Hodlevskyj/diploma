@@ -1,38 +1,56 @@
 import Link from 'next/link'
-import { FC } from 'react'
-import { Plan } from '../../types/plan'
+import { ReactNode } from 'react'
+import { Badge } from '../ui/badge'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '../ui/card'
 
 interface PlanCardProps {
-	plan: Plan
-	onDelete: () => void
+	id: number
+	name: string
+	description: string | null
+	fitnessGoal: string | null
+	isFavorite?: boolean
+	onFavoriteChange?: (planId: number, isFavorite: boolean) => void
+	children?: ReactNode
 }
 
-const PlanCard: FC<PlanCardProps> = ({ plan, onDelete }) => {
+export function PlanCard({
+	id,
+	name,
+	description,
+	fitnessGoal,
+	children,
+}: PlanCardProps) {
 	return (
-		<div className='bg-white p-4 rounded-lg shadow hover:shadow-lg transition'>
-			<h3 className='text-lg font-bold mb-2'>{plan.name}</h3>
-			<p className='text-gray-600 mb-2'>{plan.description}</p>
-			<div className='flex items-center gap-2 mb-4'>
-				<span className='px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm'>
-					{plan.fitnessGoal.replace('_', ' ')}
-				</span>
-				<span className='px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm'>
-					{plan.status.replace('_', ' ')}
-				</span>
-			</div>
-			<div className='flex justify-between'>
+		<Card className='overflow-hidden'>
+			<CardHeader className='relative'>
+				<div className='absolute top-3 right-3'>{children}</div>
+				<CardTitle className='text-xl'>{name}</CardTitle>
+				{fitnessGoal && (
+					<Badge variant='outline' className='w-fit'>
+						{fitnessGoal}
+					</Badge>
+				)}
+			</CardHeader>
+			<CardContent>
+				<CardDescription className='line-clamp-3'>
+					{description || 'Немає опису'}
+				</CardDescription>
+			</CardContent>
+			<CardFooter className='flex justify-between'>
 				<Link
-					href={`/plans/${plan.id}`}
-					className='text-blue-500 hover:text-blue-700'
+					href={`/dashboard/plans/${id}`}
+					className='text-primary hover:underline'
 				>
-					Деталі
+					Переглянути деталі
 				</Link>
-				<button onClick={onDelete} className='text-red-500 hover:text-red-700'>
-					Видалити
-				</button>
-			</div>
-		</div>
+			</CardFooter>
+		</Card>
 	)
 }
-
-export default PlanCard

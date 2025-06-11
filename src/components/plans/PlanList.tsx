@@ -43,7 +43,7 @@ export function PlanList({ plans, onDelete, isDeleting }: PlanListProps) {
 					</div>
 
 					<div className='flex justify-between'>
-						<Link href={`/plans/${plan.id}`}>
+						<Link href={`/dashboard/plans/${plan.id}`}>
 							<Button variant='outline'>Деталі</Button>
 						</Link>
 						<Button
