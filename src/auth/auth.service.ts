@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -61,6 +62,8 @@ interface StravaTokenResponse {
 @Injectable()
 export class AuthService {
   private transporter: nodemailer.Transporter;
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -78,29 +81,43 @@ export class AuthService {
     });
   }
 
-  public generateToken(user: any) {
-    const payload = { sub: user.id, email: user.email, role: user.role };
+  generateToken(user: any): Tokens {
+    const payload = {
+      email: user.email,
+      sub: Number(user.id),
+      role: user.role,
+    };
 
     return {
-      access_token: this.jwtService.sign(payload, { expiresIn: '15m' }),
-      refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
+      access_token: this.jwtService.sign(payload, {
+        secret: process.env.JWT_SECRET,
+        expiresIn: '1h',
+      }),
+      refresh_token: this.jwtService.sign(payload, {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: '7d',
+      }),
     };
   }
 
-  public setCookies(res: Response, tokens: Tokens): void {
+  setCookies(
+    res: Response,
+    tokens: { access_token: string; refresh_token: string },
+  ) {
     res.cookie('access_token', tokens.access_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 15 * 24 * 60 * 60 * 1000, // 15 днів
       sameSite: 'lax',
-      maxAge: 15 * 60 * 1000, // 60 хвилин
+      secure: process.env.NODE_ENV === 'production',
     });
 
     res.cookie('refresh_token', tokens.refresh_token, {
       httpOnly: true,
+      path: '/auth/refresh',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 днів
+      sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/auth/refresh', // Обмежити доступ тільки для endpoint оновлення токена
     });
   }
 
@@ -186,27 +203,6 @@ export class AuthService {
 
     return { message: 'Email verified successfully' };
   }
-
-  // async login(email: string, password: string, res: Response) {
-  //   const user = await this.prisma.user.findUnique({ where: { email } });
-  //   if (!user)
-  //     throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
-
-  //   const isPasswordValid = await bcrypt.compare(password, user.password);
-  //   if (!isPasswordValid)
-  //     throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
-
-  //   const tokens = this.generateToken(user);
-
-  //   res.cookie('access_token', tokens.access_token, { httpOnly: true });
-  //   res.cookie('refresh_token', tokens.refresh_token, { httpOnly: true });
-
-  //   return {
-  //     message: 'Login successful',
-  //     isSetupComplete: user.isSetupComplete,
-  //   };
-  // }
-
   async login(email: string, password: string, res: Response) {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user)
@@ -439,5 +435,31 @@ export class AuthService {
     );
 
     return response.data;
+  }
+
+  async validateUser(email: string, password: string): Promise<any> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (!user) {
+        this.logger.warn(`Login attempt with non-existent email: ${email}`);
+        return null;
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        this.logger.warn(`Invalid password for user: ${email}`);
+        return null;
+      }
+
+      const { password: _, ...result } = user;
+      return result;
+    } catch (error) {
+      this.logger.error(`Error validating user: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 }
