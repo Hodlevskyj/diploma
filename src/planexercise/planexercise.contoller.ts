@@ -12,15 +12,11 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreatePlanDto } from './dto/createPlan.dto';
-import {
-  CreateWorkoutDayDto,
-  CreateWorkoutPlanExerciseDto,
-  GeneratePlanDto,
-} from './dto/generatePlan.dto';
+import { GeneratePlanDto } from './dto/generatePlan.dto';
 import { PlanExerciseService } from './planexercise.service';
 import { UpdatePlanDto } from './plansexercise.dto';
 
-@Controller('plans')
+@Controller('dashboard/plans')
 @UseGuards(JwtAuthGuard)
 export class PlansExerciseController {
   constructor(private readonly workoutPlanService: PlanExerciseService) {}
@@ -50,7 +46,7 @@ export class PlansExerciseController {
     @Request() req,
   ) {
     const userId = req.user.userId;
-    return this.workoutPlanService.updatePlan(id, userId, dto);
+    return this.workoutPlanService.updatePlan(id, dto, userId);
   }
 
   @Delete(':id')
@@ -133,13 +129,14 @@ export class PlansExerciseController {
     return this.workoutPlanService.completePlan(planId, userId, body);
   }
 
-  //історія виконання плану
-  @Get(':id/progress/:userId')
+  @Get(':id/progress')
+  @UseGuards(JwtAuthGuard)
   async getPlanProgress(
     @Param('id', ParseIntPipe) planId: number,
-    @Param('userId', ParseIntPipe) userId: number,
+    @Request() req,
   ) {
-    return this.workoutPlanService.getPlanProgress(planId, userId);
+    const userId = req.user.userId;
+    return this.workoutPlanService.getPlanProgress(userId, planId);
   }
 
   //збереження проміжного прогресу
@@ -173,52 +170,5 @@ export class PlansExerciseController {
   async getPlans(@Request() req) {
     const userId = req.user.userId;
     return this.workoutPlanService.findAll(userId);
-  }
-
-  @Post(':planId/days')
-  async createDay(
-    @Param('planId', ParseIntPipe) planId: number,
-    @Body() dto: CreateWorkoutDayDto,
-    @Request() req,
-  ) {
-    const userId = req.user.userId;
-    return this.workoutPlanService.createDay(userId, planId, dto);
-  }
-
-  @Delete(':planId/days/:dayId')
-  async deleteDay(
-    @Param('planId', ParseIntPipe) planId: number,
-    @Param('dayId', ParseIntPipe) dayId: number,
-    @Request() req,
-  ) {
-    const userId = req.user.userId;
-    return this.workoutPlanService.deleteDay(userId, planId, dayId);
-  }
-
-  @Post(':planId/days/:dayId/exercises')
-  async addExerciseToDay(
-    @Param('planId', ParseIntPipe) planId: number,
-    @Param('dayId', ParseIntPipe) dayId: number,
-    @Body() dto: CreateWorkoutPlanExerciseDto,
-    @Request() req,
-  ) {
-    const userId = req.user.userId;
-    return this.workoutPlanService.addExerciseToDay(userId, planId, dayId, dto);
-  }
-
-  @Delete(':planId/days/:dayId/exercises/:exerciseId')
-  async removeExerciseFromDay(
-    @Param('planId', ParseIntPipe) planId: number,
-    @Param('dayId', ParseIntPipe) dayId: number,
-    @Param('exerciseId', ParseIntPipe) exerciseId: number,
-    @Request() req,
-  ) {
-    const userId = req.user.userId;
-    return this.workoutPlanService.removeExerciseFromDay(
-      userId,
-      planId,
-      dayId,
-      exerciseId,
-    );
   }
 }
