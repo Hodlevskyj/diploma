@@ -103,17 +103,17 @@ model ExerciseCategory {
 model TrackedExercise {
   id            Int          @id @default(autoincrement())
   userId        Int
-  user          User         @relation(fields: [userId], references: [id])
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   exerciseId    Int
   exercise      Exercise     @relation(fields: [exerciseId], references: [id])
-  type          String // "reps" or "time"
-  value         Int //секунди або повторення
+  type          String
+  value         Int
   targetValue   Int
   completed     Boolean      @default(false)
   pauseCount    Int          @default(0)
   resetCount    Int          @default(0)
   completedAt   DateTime     @default(now())
-  WorkoutPlan   WorkoutPlan? @relation(fields: [workoutPlanId], references: [id])
+  WorkoutPlan   WorkoutPlan? @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
   workoutPlanId Int?
 }
 
@@ -139,7 +139,7 @@ model Exercise {
   completions        WorkoutPlanCompletion[]
   TrackedExercise    TrackedExercise[]
   userId             Int
-  user               User                    @relation(fields: [userId], references: [id])
+  user               User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   FavoriteExercise   FavoriteExercise[]
 
   @@index([userId])
@@ -149,7 +149,7 @@ model Exercise {
 model WorkoutPlan {
   id               Int                     @id @default(autoincrement())
   userId           Int
-  user             User                    @relation(fields: [userId], references: [id])
+  user             User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   name             String
   description      String?
   fitnessGoal      GoalType?
@@ -161,26 +161,29 @@ model WorkoutPlan {
   schedules        WorkoutPlanSchedule[]
   trackedExercises TrackedExercise[]
   FavoritePlan     FavoritePlan[]
+  WorkoutDay       WorkoutDay[]
 }
 
 model WorkoutPlanExercise {
   id            Int         @id @default(autoincrement())
   workoutPlanId Int
   exerciseId    Int
-  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id])
-  exercise      Exercise    @relation(fields: [exerciseId], references: [id])
+  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+  exercise      Exercise    @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
   order         Int
   reps          Int?        @default(0)
   duration      Int?        @default(0)
   restDuration  Int?        @default(0)
+  workoutDayId  Int?
+  workoutDay    WorkoutDay? @relation(fields: [workoutDayId], references: [id])
 }
 
 model WorkoutPlanCompletion {
   id            Int         @id @default(autoincrement())
   workoutPlanId Int
-  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id])
+  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
   userId        Int
-  user          User        @relation(fields: [userId], references: [id])
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   completedAt   DateTime    @default(now())
   Exercise      Exercise?   @relation(fields: [exerciseId], references: [id])
   exerciseId    Int?
@@ -189,15 +192,24 @@ model WorkoutPlanCompletion {
 model WorkoutPlanSchedule {
   id            Int         @id @default(autoincrement())
   workoutPlanId Int
-  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id])
+  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
   date          DateTime
+}
+
+model WorkoutDay {
+  id            Int                   @id @default(autoincrement())
+  workoutPlan   WorkoutPlan           @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+  workoutPlanId Int
+  dayNumber     Int
+  name          String?
+  exercises     WorkoutPlanExercise[]
 }
 
 model FavoriteExercise {
   id         Int      @id @default(autoincrement())
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
-  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
   exerciseId Int
   createdAt  DateTime @default(now())
 
@@ -205,12 +217,14 @@ model FavoriteExercise {
 }
 
 model FavoritePlan {
-  id        Int         @id @default(autoincrement())
-  user      User        @relation(fields: [userId], references: [id])
+  id        Int      @id @default(autoincrement())
   userId    Int
-  plan      WorkoutPlan @relation(fields: [planId], references: [id])
   planId    Int
-  createdAt DateTime    @default(now())
+  createdAt DateTime @default(now())
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan WorkoutPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   @@unique([userId, planId])
+  @@map("favorite_plans")
 }
