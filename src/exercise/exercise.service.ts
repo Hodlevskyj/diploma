@@ -96,6 +96,65 @@ export class ExerciseService {
     return this.prisma.exerciseCategory.findMany();
   }
 
+  async getUserStats(userId: number) {
+    // Отримуємо всі записи про тренування
+    const workoutRecords = await this.prisma.trackedExercise.findMany({
+      where: { userId },
+      select: { workoutPlanId: true, completedAt: true },
+    });
+
+    // Створюємо унікальний ідентифікатор для кожного тренування (комбінація planId та дати)
+    const uniqueWorkouts = new Set();
+    workoutRecords.forEach((record) => {
+      if (record.workoutPlanId) {
+        const date = record.completedAt.toISOString().split('T')[0]; // Беремо лише дату
+        uniqueWorkouts.add(`${record.workoutPlanId}-${date}`);
+      }
+    });
+
+    // Загальна кількість унікальних тренувань
+    const totalWorkouts = uniqueWorkouts.size;
+
+    // Отримуємо кількість завершених вправ
+    const completedExercises = await this.prisma.trackedExercise.count({
+      where: {
+        userId,
+        completed: true,
+      },
+    });
+
+    // Отримуємо кількість власних планів
+    const totalPlans = await this.prisma.workoutPlan.count({
+      where: {
+        userId,
+      },
+    });
+
+    // Отримуємо загальний час тренувань (у хвилинах)
+    const exerciseProgress = await this.prisma.trackedExercise.findMany({
+      where: {
+        userId,
+        completed: true,
+      },
+      select: {
+        exercise: {
+          select: { duration: true },
+        },
+      },
+    });
+
+    // Підраховуємо загальний час лише для завершених вправ
+    const totalTime = exerciseProgress.reduce((total, progress) => {
+      return total + (progress.exercise?.duration || 0);
+    }, 0);
+
+    return {
+      totalWorkouts,
+      completedExercises,
+      totalPlans,
+      totalTime,
+    };
+  }
   async createCategory(name: string) {
     return this.prisma.exerciseCategory.create({ data: { name } });
   }

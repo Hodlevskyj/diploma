@@ -38,6 +38,13 @@ export class ExerciseController {
     return this.exerciseService.getAllExercises(category);
   }
 
+  @Get('stats')
+  @UseGuards(JwtAuthGuard)
+  async getUserStats(@Request() req) {
+    const userId = req.user.userId;
+    return this.exerciseService.getUserStats(userId);
+  }
+
   @Get(':id')
   async getExerciseById(@Param('id', ParseIntPipe) id: number) {
     return this.exerciseService.getExerciseById(id);

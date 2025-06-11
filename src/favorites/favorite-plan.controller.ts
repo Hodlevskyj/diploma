@@ -19,53 +19,6 @@ export class FavoritePlanController {
 
   constructor(private readonly favoriteService: FavoritePlanService) {}
 
-  @Get()
-  @UseGuards(JwtAuthGuard)
-  async getFavorites(@Request() req) {
-    try {
-      this.logger.log(`Fetching favorites for user: ${req.user?.userId}`);
-      this.logger.log(`User object: ${JSON.stringify(req.user)}`);
-
-      if (!req.user || !req.user.userId) {
-        this.logger.error('No user or userId found in request');
-        throw new HttpException(
-          'User not authenticated',
-          HttpStatus.UNAUTHORIZED,
-        );
-      }
-
-      this.logger.log(`User ID type: ${typeof req.user.userId}`);
-      this.logger.log(`User ID value: ${req.user.userId}`);
-
-      let userId;
-      if (typeof req.user.userId === 'string') {
-        userId = parseInt(req.user.userId, 10);
-        this.logger.log(`Parsed userId from string: ${userId}`);
-      } else {
-        userId = req.user.userId;
-        this.logger.log(`Using userId as is: ${userId}`);
-      }
-
-      if (isNaN(userId)) {
-        this.logger.error(`Invalid userId after parsing: ${userId}`);
-        throw new HttpException(
-          'Invalid user ID format',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      const favorites = await this.favoriteService.getFavoritePlans(userId);
-      this.logger.log(`Successfully fetched ${favorites.length} favorites`);
-      return favorites;
-    } catch (error) {
-      this.logger.error(`Error fetching favorites: ${error.message}`);
-      throw new HttpException(
-        error.message || 'Failed to fetch favorites',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
   @Post(':planId')
   @UseGuards(JwtAuthGuard)
   async addFavorite(@Request() req, @Param('planId') planId: string) {

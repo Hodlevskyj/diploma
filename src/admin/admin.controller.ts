@@ -59,7 +59,7 @@ export class AdminController {
     return this.exerciseService.deleteExercise(id);
   }
 
-  @Get()
+  @Get('categories')
   async getCategories() {
     return this.exerciseService.getCategories();
   }
