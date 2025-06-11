@@ -6,7 +6,6 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { ExerciseModule } from './exercise/exercise.module';
-import { FavoriteExerciseModule } from './favorites/favorite-exercise.module';
 import { FavoritePlanModule } from './favorites/favorite-plan.module';
 import { PlanExerciseModule } from './planexercise/planexercise.module';
 import { PrismaModule } from './prisma.module';
@@ -22,7 +21,6 @@ import { UserModule } from './user/user.module';
     ActivitiesModule,
     ExerciseModule,
     PlanExerciseModule,
-    FavoriteExerciseModule,
     FavoritePlanModule,
     AdminModule,
   ],
