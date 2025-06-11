@@ -4,9 +4,12 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  InternalServerErrorException,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
+  Put,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -35,7 +38,30 @@ export class AdminController {
 
   @Post('exercises')
   async createExercise(@Body() dto: CreateExerciseDto, @Request() req) {
-    return this.exerciseService.createExercise(req.user.id, dto);
+    return this.exerciseService.createExercise(req.user.userId, dto);
+  }
+
+  @Get('exercises')
+  async getExercises() {
+    return this.exerciseService.getAllExercises();
+  }
+
+  @Put('exercises/:id')
+  async updateExercise(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateExerciseDto,
+  ) {
+    return this.exerciseService.updateExercise(id, dto);
+  }
+
+  @Delete('exercises/:id')
+  async deleteExercise(@Param('id', ParseIntPipe) id: number) {
+    return this.exerciseService.deleteExercise(id);
+  }
+
+  @Get()
+  async getCategories() {
+    return this.exerciseService.getCategories();
   }
 
   @Get('users/count')
@@ -61,7 +87,7 @@ export class AdminController {
 
   @Delete(':id')
   async deleteUserById(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    if (req.user.id === id) {
+    if (req.user.userId === id) {
       throw new ForbiddenException(
         'Адміністратор не може видалити свій обліковий запис',
       );
@@ -76,10 +102,94 @@ export class AdminController {
     @Body('role') role: Role,
     @Request() req,
   ) {
-    if (req.user.id === id) {
+    if (req.user.userId === id) {
       throw new ForbiddenException('Адміністратор не може змінити свою роль');
     }
 
     return this.userService.updateUserRole(id, role);
+  }
+
+  @Get('plans')
+  async getAllPlans() {
+    return this.prisma.workoutPlan.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Get('plans/:id')
+  async getPlanById(@Param('id', ParseIntPipe) id: number) {
+    const plan = await this.prisma.workoutPlan.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        WorkoutDay: {
+          include: {
+            exercises: {
+              include: {
+                exercise: true,
+              },
+              orderBy: { order: 'asc' },
+            },
+          },
+          orderBy: { dayNumber: 'asc' },
+        },
+      },
+    });
+
+    if (!plan) {
+      throw new NotFoundException(`План з ID ${id} не знайдено`);
+    }
+
+    return plan;
+  }
+
+  @Delete('plans/:id')
+  async deletePlan(@Param('id', ParseIntPipe) id: number) {
+    try {
+      // Спочатку видаляємо пов'язані записи
+      await this.prisma.workoutPlanExercise.deleteMany({
+        where: {
+          workoutDay: {
+            workoutPlanId: id,
+          },
+        },
+      });
+
+      await this.prisma.workoutDay.deleteMany({
+        where: {
+          workoutPlanId: id,
+        },
+      });
+
+      await this.prisma.favoritePlan.deleteMany({
+        where: {
+          planId: id,
+        },
+      });
+
+      // Тепер видаляємо сам план
+      await this.prisma.workoutPlan.delete({
+        where: { id },
+      });
+
+      return { success: true, message: 'План успішно видалено' };
+    } catch (error) {
+      throw new InternalServerErrorException('Помилка видалення плану');
+    }
   }
 }
