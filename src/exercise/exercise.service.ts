@@ -74,9 +74,18 @@ export class ExerciseService {
       restDuration?: number;
       calories?: number;
       intensity?: string;
+      imageUrl?: string;
     },
   ) {
-    return this.prisma.exercise.update({ where: { id }, data });
+    // Видаляємо поля, які не можна оновлювати
+    const updateData = { ...data };
+
+    // Видаляємо поля, які не повинні бути в запиті оновлення
+
+    return this.prisma.exercise.update({
+      where: { id },
+      data: updateData,
+    });
   }
 
   async deleteExercise(id: number) {

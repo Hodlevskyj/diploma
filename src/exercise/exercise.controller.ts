@@ -11,13 +11,20 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+import { PlanExerciseService } from 'src/planexercise/planexercise.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import FavoriteService from '../favorites/favorite.service';
+import { GeneratePlanDto } from '../planexercise/dto/generatePlan.dto';
 import { CreateExerciseDto } from '../planexercise/plansexercise.dto';
 import { ExerciseService } from './exercise.service';
 
-@Controller('exercises')
+@Controller('dashboard/exercises')
 export class ExerciseController {
-  constructor(private exerciseService: ExerciseService) {}
+  constructor(
+    private exerciseService: ExerciseService,
+    private favoriteService: FavoriteService,
+    private planExerciseService: PlanExerciseService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -103,5 +110,12 @@ export class ExerciseController {
   @UseGuards(JwtAuthGuard)
   async createCategory(@Body() data: { name: string }) {
     return this.exerciseService.createCategory(data.name);
+  }
+
+  @Post('generate')
+  @UseGuards(JwtAuthGuard)
+  async generatePlan(@Body() dto: GeneratePlanDto, @Request() req) {
+    const userId = req.user.userId;
+    return this.planExerciseService.generatePlan(userId, dto);
   }
 }
