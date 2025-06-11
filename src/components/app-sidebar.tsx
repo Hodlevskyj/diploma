@@ -1,26 +1,19 @@
 'use client'
 
 import {
+	ArrowBigLeft,
 	ArrowUpCircleIcon,
 	BarChartIcon,
 	CameraIcon,
-	ClipboardListIcon,
-	DatabaseIcon,
+	Dumbbell,
 	FileCodeIcon,
-	FileIcon,
 	FileTextIcon,
-	FolderIcon,
-	HelpCircleIcon,
-	ListIcon,
-	SearchIcon,
-	SettingsIcon,
+	Notebook,
 } from 'lucide-react'
 import * as React from 'react'
 
-import { NavDocuments } from '@/components/nav-documents'
 import { NavMain } from '@/components/nav-main'
 import { NavSecondary } from '@/components/nav-secondary'
-import { NavUser } from '@/components/nav-user'
 import {
 	Sidebar,
 	SidebarContent,
@@ -32,21 +25,11 @@ import {
 } from '@/components/ui/sidebar'
 
 const data = {
-	user: {
-		name: 'shadcn',
-		email: 'm@example.com',
-		avatar: '/avatars/shadcn.jpg',
-	},
 	navMain: [
-		// {
-		// 	title: 'Користувачі',
-		// 	url: '/admin/users',
-		// 	icon: LayoutDashboardIcon,
-		// },
 		{
 			title: 'Вправи',
 			url: '/admin/exercises',
-			icon: ListIcon,
+			icon: Dumbbell,
 		},
 		{
 			title: 'Статистика',
@@ -56,12 +39,12 @@ const data = {
 		{
 			title: 'Плани',
 			url: '/admin/plans',
-			icon: FolderIcon,
+			icon: Notebook,
 		},
 		{
-			title: 'Налаштування',
-			url: '/admin/settings',
-			icon: SettingsIcon,
+			title: 'Повернутися назад',
+			url: '/dashboard',
+			icon: ArrowBigLeft,
 		},
 	],
 	navClouds: [
@@ -113,39 +96,39 @@ const data = {
 		},
 	],
 	navSecondary: [
-		{
-			title: 'Settings',
-			url: '#',
-			icon: SettingsIcon,
-		},
-		{
-			title: 'Get Help',
-			url: '#',
-			icon: HelpCircleIcon,
-		},
-		{
-			title: 'Search',
-			url: '#',
-			icon: SearchIcon,
-		},
+		// {
+		// 	title: 'Settings',
+		// 	url: '#',
+		// 	icon: SettingsIcon,
+		// },
+		// {
+		// 	title: 'Get Help',
+		// 	url: '#',
+		// 	icon: HelpCircleIcon,
+		// },
+		// {
+		// 	title: 'Search',
+		// 	url: '#',
+		// 	icon: SearchIcon,
+		// },
 	],
-	documents: [
-		{
-			name: 'Data Library',
-			url: '#',
-			icon: DatabaseIcon,
-		},
-		{
-			name: 'Reports',
-			url: '#',
-			icon: ClipboardListIcon,
-		},
-		{
-			name: 'Word Assistant',
-			url: '#',
-			icon: FileIcon,
-		},
-	],
+	// documents: [
+	// {
+	// 	name: 'Data Library',
+	// 	url: '#',
+	// 	icon: DatabaseIcon,
+	// },
+	// {
+	// 	name: 'Reports',
+	// 	url: '#',
+	// 	icon: ClipboardListIcon,
+	// },
+	// {
+	// 	name: 'Word Assistant',
+	// 	url: '#',
+	// 	icon: FileIcon,
+	// },
+	// ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -160,20 +143,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 						>
 							<a href='#'>
 								<ArrowUpCircleIcon className='h-5 w-5' />
-								<span className='text-base font-semibold'>Acme Inc.</span>
+								<span className='text-base font-semibold'>FitnessApp</span>
 							</a>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>
 			</SidebarHeader>
-			<SidebarContent>
+			<SidebarContent className='mt-4'>
+				{' '}
+				{/* Додайте відступ зверху */}
 				<NavMain items={data.navMain} />
-				<NavDocuments items={data.documents} />
 				<NavSecondary items={data.navSecondary} className='mt-auto' />
 			</SidebarContent>
-			<SidebarFooter>
-				<NavUser user={data.user} />
-			</SidebarFooter>
+			<SidebarFooter>{/* <NavUser user={data.user} /> */}</SidebarFooter>
 		</Sidebar>
 	)
 }
