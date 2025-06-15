@@ -7,6 +7,10 @@ interface User {
 	id: number
 	email: string
 	name: string
+	goal?: string
+	height?: number
+	weight?: number
+	age?: number
 }
 
 interface AuthContextType {
@@ -41,7 +45,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			)
 
 			if (response.status === 401) {
-				// Спробуємо оновити токен
 				const refreshResponse = await fetch(
 					`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/refresh`,
 					{
@@ -51,7 +54,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				)
 
 				if (refreshResponse.ok) {
-					// Оновлення успішне, повторюємо запит
 					const retryResponse = await fetch(
 						`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/current-user`,
 						{

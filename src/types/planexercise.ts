@@ -1,11 +1,31 @@
-export type ExerciseCategory = {
+export enum GoalType {
+	LOSE_WEIGHT = 'LOSE_WEIGHT',
+	GAIN_MUSCLE = 'GAIN_MUSCLE',
+	STAY_ACTIVE = 'STAY_ACTIVE',
+}
+
+export enum PlanStatus {
+	IN_PROGRESS = 'IN_PROGRESS',
+	COMPLETED = 'COMPLETED',
+	CANCELLED = 'CANCELLED',
+}
+
+export enum ExerciseType {
+	REPS = 'REPS',
+	TIME = 'TIME',
+}
+
+export type DifficultyLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
+export type EquipmentType = 'NONE' | 'MINIMAL' | 'HOME_GYM' | 'FULL_GYM'
+
+export interface ExerciseCategory {
 	id: number
 	name: string
 	createdAt: string
 	updatedAt: string
 }
 
-export type Exercise = {
+export interface Exercise {
 	id: number
 	name: string
 	muscleGroup: string
@@ -26,7 +46,7 @@ export type Exercise = {
 	userId: number
 }
 
-export type WorkoutPlanExercise = {
+export interface WorkoutPlanExercise {
 	id: number
 	workoutPlanId: number
 	exerciseId: number
@@ -35,35 +55,28 @@ export type WorkoutPlanExercise = {
 	duration?: number | null
 	restDuration?: number | null
 	exercise: Exercise
-}
-
-export interface PlanExercise {
-	id: number
-	exerciseId: number
-	exercise: Exercise
-	order: number
-	reps?: number
-	duration?: number // в секундах
-	restDuration?: number // в секундах
+	workoutDayId?: number | null
 }
 
 export interface WorkoutDay {
 	id: number
+	workoutPlanId: number
 	dayNumber: number
-	name?: string
-	exercises: PlanExercise[]
+	name?: string | null
+	exercises: WorkoutPlanExercise[]
 }
 
 export interface WorkoutPlan {
 	id: number
+	userId: number
 	name: string
-	description?: string
-	fitnessGoal?: GoalType
+	description?: string | null
+	fitnessGoal?: GoalType | null
 	status: PlanStatus
 	createdAt: string
 	updatedAt: string
-	exercises: WorkoutPlanExercise[]
 	WorkoutDay?: WorkoutDay[]
+	exercises?: WorkoutPlanExercise[]
 	progress?: {
 		total: number
 		completed: number
@@ -71,32 +84,71 @@ export interface WorkoutPlan {
 	}
 }
 
-// export interface TrackedExercise {
-// 	id: number
-// 	exerciseId: number
-// 	workoutPlanId: number
-// 	completed: boolean
-// 	reps?: number
-// 	duration?: number
-// 	completedAt: string
-// 	exercise: Exercise
-// }
+// DTO інтерфейси для API запитів
+export interface CreatePlanDto {
+	name: string
+	description?: string
+	fitnessGoal?: GoalType
+}
+
+export interface UpdatePlanDto {
+	name?: string
+	description?: string
+	fitnessGoal?: GoalType
+	status?: PlanStatus
+}
+
+export interface AddExerciseDto {
+	exerciseId: number
+	order: number
+	reps?: number
+	duration?: number
+	restDuration?: number
+}
+
+export interface CreateExerciseDto {
+	name: string
+	muscleGroup: string
+	description?: string
+	difficulty?: string
+	equipment?: string
+	exerciseCategoryId?: number
+	reps?: number
+	duration?: number
+	restDuration?: number
+	imageUrl?: string
+	videoUrl?: string
+}
+
+export interface GeneratePlanFormData {
+	fitnessGoal: GoalType
+	daysPerWeek: number
+	preferredDuration?: number
+	height?: number
+	weight?: number
+	age?: number
+	difficultyLevel: DifficultyLevel
+	equipmentType: EquipmentType
+}
+
+export interface ExerciseProgress {
+	type: ExerciseType | 'reps' | 'time'
+	targetValue: number
+	currentValue: number
+	isActive: boolean
+}
+
 export interface TrackedExercise {
 	id: number
 	userId: number
 	exerciseId: number
-	type: string // або 'time' | 'reps'
+	type: string
 	value: number
 	targetValue: number
 	completed: boolean
 	pauseCount: number
 	resetCount: number
 	completedAt: string
-}
-
-export enum ExerciseType {
-	REPS = 'reps',
-	TIME = 'time',
 }
 
 export interface FavoriteExercise {
@@ -127,87 +179,4 @@ export interface FavoritePlan {
 		}>
 	}
 	createdAt: string
-}
-
-export enum GoalType {
-	LOSE_WEIGHT = 'LOSE_WEIGHT',
-	GAIN_MUSCLE = 'GAIN_MUSCLE',
-	STAY_ACTIVE = 'STAY_ACTIVE',
-}
-
-export enum PlanStatus {
-	IN_PROGRESS = 'IN_PROGRESS',
-	COMPLETED = 'COMPLETED',
-	CANCELLED = 'CANCELLED',
-}
-
-export interface PlanExercise {
-	id: number
-	exerciseId: number
-	order: number
-	reps?: number
-	duration?: number
-	restDuration?: number
-	exercise: Exercise
-}
-
-export interface WorkoutDay {
-	id: number
-	dayNumber: number
-	name?: string
-	exercises: PlanExercise[]
-}
-
-export interface Plan {
-	id: number
-	name: string
-	description: string
-	fitnessGoal: GoalType
-	status: PlanStatus
-	exercises: PlanExercise[]
-	WorkoutDay?: WorkoutDay[]
-	createdAt: string
-	updatedAt: string
-}
-
-export interface UpdatePlanDto {
-	name?: string
-	description?: string
-	fitnessGoal?: GoalType
-	status?: PlanStatus
-}
-
-export interface CreatePlanDto {
-	name: string
-	description: string
-	fitnessGoal: GoalType
-}
-
-export interface AddExerciseDto {
-	exerciseId: number
-	order: number
-	reps?: number
-	duration?: number
-	restDuration?: number
-}
-
-export interface CreateExerciseDto {
-	name: string
-	muscleGroup: string
-	description?: string
-	difficulty?: string
-	equipment?: string
-	exerciseCategoryId?: number
-	reps?: number
-	duration?: number
-	restDuration?: number
-	imageUrl?: string
-	videoUrl?: string
-}
-
-export interface ExerciseProgress {
-	type: ExerciseType | 'reps' | 'time'
-	targetValue: number
-	currentValue: number
-	isActive: boolean
 }
