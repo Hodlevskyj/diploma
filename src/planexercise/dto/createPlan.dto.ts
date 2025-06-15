@@ -1,5 +1,11 @@
 import { GoalType, PlanStatus } from '@prisma/client';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreatePlanDto {
   @IsString()
@@ -16,4 +22,9 @@ export class CreatePlanDto {
   @IsOptional()
   @IsEnum(PlanStatus)
   status?: PlanStatus;
+
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  exerciseIds?: number[];
 }
