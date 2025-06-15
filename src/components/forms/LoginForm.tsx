@@ -61,11 +61,6 @@ export default function LoginForm({
 			}
 
 			await login(formData.email, formData.password)
-			if (!data.isSetupComplete) {
-				router.push('/setup')
-			} else {
-				router.push('/dashboard')
-			}
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Login failed')
 		} finally {
@@ -74,13 +69,7 @@ export default function LoginForm({
 	}
 
 	return (
-		<div
-		// className={cn(
-		// 	'flex flex-col gap-6 items-center justify-center min-h-screen',
-		// 	className
-		// )}
-		// {...props}
-		>
+		<div>
 			<Card className='w-full max-w-md'>
 				<CardHeader className='text-center'>
 					<CardTitle className='text-2xl'>Welcome back</CardTitle>
@@ -151,17 +140,6 @@ export default function LoginForm({
 					</form>
 				</CardContent>
 			</Card>
-			<div className='text-muted-foreground text-center text-xs'>
-				By clicking continue, you agree to our{' '}
-				<a href='#' className='underline underline-offset-4'>
-					Terms of Service
-				</a>{' '}
-				and{' '}
-				<a href='#' className='underline underline-offset-4'>
-					Privacy Policy
-				</a>
-				.
-			</div>
 		</div>
 	)
 }

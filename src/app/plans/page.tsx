@@ -27,6 +27,7 @@ export default function PlansPage() {
 	const [error, setError] = useState<string | null>(null)
 	const [deleteId, setDeleteId] = useState<number | null>(null)
 	const [deleting, setDeleting] = useState(false)
+	const [showCreateModal, setShowCreateModal] = useState(false)
 
 	const fetchPlans = () => {
 		setLoading(true)
@@ -54,6 +55,11 @@ export default function PlansPage() {
 		}
 	}
 
+	// Функція для відкриття модального вікна
+	const openCreateModal = () => {
+		setShowCreateModal(true)
+	}
+
 	if (loading) return <div>Завантаження...</div>
 	if (error) return <div>Помилка: {error}</div>
 
@@ -61,8 +67,14 @@ export default function PlansPage() {
 		<div className='max-w-2xl mx-auto py-8'>
 			<div className='flex justify-between items-center mb-6'>
 				<h1 className='text-2xl font-bold'>Плани тренувань</h1>
-				<CreatePlanModal onCreated={fetchPlans} />
+				<div className='flex gap-2'>
+					<Button onClick={openCreateModal}>Створити план</Button>
+					<Link href='/plans/generate'>
+						<Button variant='outline'>Згенерувати план</Button>
+					</Link>
+				</div>
 			</div>
+
 			{plans.length === 0 ? (
 				<p>Планів ще немає.</p>
 			) : (
@@ -95,6 +107,13 @@ export default function PlansPage() {
 					))}
 				</div>
 			)}
+
+			{/* Модальне вікно створення плану */}
+			<CreatePlanModal
+				isOpen={showCreateModal}
+				onClose={() => setShowCreateModal(false)}
+				onPlanCreated={fetchPlans}
+			/>
 
 			{/* Модалка підтвердження видалення */}
 			<Dialog

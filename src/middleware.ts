@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
 // Захищені маршрути
-const protectedRoutes = ['/dashboard', '/profile', '/settings']
+const protectedRoutes = ['/dashboard', '/profile']
 // Маршрути, до яких можуть заходити тільки неавторизовані користувачі
 const authRoutes = ['/login', '/register', '/verify-email']
 
@@ -11,7 +11,6 @@ export async function middleware(request: NextRequest) {
 	const token = request.cookies.get('access_token')
 	const isAuthenticated = !!token
 
-	// Якщо користувач авторизований, отримуємо його дані
 	let userData = null
 	if (isAuthenticated) {
 		try {
@@ -46,20 +45,11 @@ export async function middleware(request: NextRequest) {
 		return NextResponse.redirect(new URL('/login', request.url))
 	}
 
-	// Якщо користувач авторизований, але не завершив налаштування профілю → редирект на /setup
-	if (
-		isAuthenticated &&
-		userData &&
-		!userData.isSetupComplete &&
-		pathname !== '/setup'
-	) {
-		return NextResponse.redirect(new URL('/setup', request.url))
-	}
-
 	return NextResponse.next()
 }
 
 // Визначаємо, для яких маршрутів буде викликатися middleware
 export const config = {
-	matcher: [...protectedRoutes, ...authRoutes, '/setup', 'dashboard/:path*'],
+	// matcher: [...protectedRoutes, ...authRoutes, '/setup', 'dashboard/:path*'],
+	matcher: [...protectedRoutes, ...authRoutes, 'dashboard/:path*'],
 }

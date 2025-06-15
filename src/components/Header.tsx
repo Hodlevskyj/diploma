@@ -37,6 +37,10 @@ export default function Header() {
 		return <div>Loading...</div>
 	}
 
+	const handleBackToDashboard = () => {
+		router.push('/dashboard')
+	}
+
 	return (
 		<header className='w-full border-b bg-card sticky top-0 z-50'>
 			<div className='container flex h-16 items-center justify-between px-4 md:px-6'>

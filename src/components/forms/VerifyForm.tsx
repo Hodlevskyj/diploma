@@ -40,7 +40,7 @@ export default function VerifyEmailPage() {
 				setMessage('Email verified successfully!')
 
 				setTimeout(() => {
-					router.push('/dashboard')
+					router.push('/login')
 				}, 3000)
 			} catch (error) {
 				setStatus('error')
@@ -71,7 +71,7 @@ export default function VerifyEmailPage() {
 						</h2>
 						<p className='text-gray-600'>{message}</p>
 						<p className='text-sm text-gray-500 mt-4'>
-							Redirecting to dashboard...
+							Redirecting to login page...
 						</p>
 					</div>
 				)}

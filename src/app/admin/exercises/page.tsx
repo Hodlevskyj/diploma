@@ -27,6 +27,7 @@ export enum ExerciseCategory {
 	CARDIO = 'CARDIO',
 	FLEXIBILITY = 'FLEXIBILITY',
 	BALANCE = 'BALANCE',
+	ARMS = 'ARMS',
 }
 
 // Тип для нової вправи
@@ -71,6 +72,7 @@ export default function ExercisesPage() {
 		difficulty: 'Medium',
 		description: '',
 		category: '',
+		equipment: '',
 	})
 	const [categories, setCategories] = useState<CategoryType[]>([])
 
@@ -101,12 +103,10 @@ export default function ExercisesPage() {
 			.finally(() => setLoading(false))
 	}
 
-	// Завантаження категорій
 	const loadCategories = async () => {
 		if (access !== 'allowed') return
 		setLoading(true)
 		try {
-			// Використовуємо функцію з API клієнта
 			const data = await adminGetCategories()
 			setCategories(data)
 		} catch (err) {
@@ -165,7 +165,6 @@ export default function ExercisesPage() {
 	}
 
 	// Функція створення нової вправи
-	// Функція створення вправи
 	const handleCreateExercise = async (e: React.FormEvent) => {
 		e.preventDefault()
 		setIsProcessing(true)
@@ -380,7 +379,7 @@ export default function ExercisesPage() {
 								<label htmlFor='new-difficulty' className='text-right'>
 									Складність
 								</label>
-								<Input
+								<select
 									id='new-difficulty'
 									value={newExercise.difficulty || ''}
 									onChange={e =>
@@ -389,9 +388,32 @@ export default function ExercisesPage() {
 											difficulty: e.target.value,
 										}))
 									}
+									className='col-span-3 p-2 border rounded'
+								>
+									<option value='Easy'>Легкий</option>
+									<option value='Medium'>Середній</option>
+									<option value='Hard'>Важкий</option>
+								</select>
+							</div>
+
+							<div className='grid grid-cols-4 items-center gap-4'>
+								<label htmlFor='new-equipment' className='text-right'>
+									Обладнання
+								</label>
+								<Input
+									id='new-equipment'
+									value={newExercise.equipment}
+									onChange={e =>
+										setNewExercise(prev => ({
+											...prev,
+											equipment: e.target.value,
+										}))
+									}
 									className='col-span-3'
+									required
 								/>
 							</div>
+
 							{/* Селектор категорій */}
 							<div className='grid grid-cols-4 items-center gap-4'>
 								<label htmlFor='new-category' className='text-right'>
@@ -520,7 +542,6 @@ export default function ExercisesPage() {
 									value={
 										editingExercise?.exerciseCategory?.name?.toUpperCase() || ''
 									}
-									// Виправляємо код для селектора редагування вправи
 									onChange={e => {
 										const categoryValue = e.target.value
 										// Знаходимо категорію за назвою
@@ -531,7 +552,7 @@ export default function ExercisesPage() {
 										setEditingExercise(prev => {
 											if (!prev) return null
 
-											// Створюємо копію exerciseCategory з правильним типом
+											// копію exerciseCategory з правильним типом
 											const updatedExerciseCategory = category
 												? {
 														id: category.id,
@@ -560,6 +581,8 @@ export default function ExercisesPage() {
 												? 'Розтяжка'
 												: category === ExerciseCategory.BALANCE
 												? 'Баланс'
+												: category === ExerciseCategory.ARMS
+												? 'Руки'
 												: category}
 										</option>
 									))}

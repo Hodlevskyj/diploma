@@ -1,7 +1,38 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { ExerciseType } from '@/types/planexercise'
 import { debounce } from 'lodash'
+import {
+	ArrowLeft,
+	BarChart3,
+	CheckCircle2,
+	Clock,
+	Coffee,
+	Dumbbell,
+	Flame,
+	Loader2,
+	Pause,
+	Play,
+	RotateCcw,
+	Settings,
+	Square,
+	Target,
+	Timer,
+	Users,
+	XCircle,
+	Zap,
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import ReactPlayer from 'react-player'
@@ -77,7 +108,10 @@ export default function ExerciseDetail({ id }: { id: string }) {
 				if (!res.ok) throw new Error('Не вдалося завантажити історію прогресу')
 				const data = await res.json()
 				console.log('Progress History Data:', data)
-				setProgressHistory(data)
+				const filteredHistory = data.filter(
+					(entry: TrackedExercise) => entry.exerciseId === Number(id)
+				)
+				setProgressHistory(filteredHistory)
 			} catch (err: any) {
 				console.error('Error fetching progress history:', err)
 			}
@@ -213,7 +247,10 @@ export default function ExerciseDetail({ id }: { id: string }) {
 				throw new Error('Не вдалося оновити історію прогресу')
 			}
 			const updatedHistory = await historyRes.json()
-			setProgressHistory(updatedHistory)
+			const filteredHistory = updatedHistory.filter(
+				(entry: TrackedExercise) => entry.exerciseId === Number(id)
+			)
+			setProgressHistory(filteredHistory)
 		} catch (err: any) {
 			toast.error(`Помилка при збереженні: ${err.message}`)
 			console.error('Помилка в handleStop:', err)
@@ -242,10 +279,10 @@ export default function ExerciseDetail({ id }: { id: string }) {
 
 	if (authLoading || loading) {
 		return (
-			<div className='min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center'>
-				<div className='text-center'>
-					<div className='inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4'></div>
-					<p className='text-lg text-gray-600 font-medium'>Завантаження...</p>
+			<div className='min-h-screen flex items-center justify-center bg-background'>
+				<div className='text-center space-y-4'>
+					<Loader2 className='h-8 w-8 animate-spin mx-auto text-primary' />
+					<p className='text-muted-foreground'>Завантаження...</p>
 				</div>
 			</div>
 		)
@@ -253,339 +290,211 @@ export default function ExerciseDetail({ id }: { id: string }) {
 
 	if (error) {
 		return (
-			<div className='min-h-screen bg-gradient-to-br from-red-50 via-white to-pink-50 flex items-center justify-center'>
-				<div className='bg-white rounded-2xl shadow-xl p-8 max-w-md mx-4 border border-red-100'>
-					<div className='text-center'>
-						<div className='w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-							<svg
-								className='w-8 h-8 text-red-500'
-								fill='none'
-								stroke='currentColor'
-								viewBox='0 0 24 24'
-							>
-								<path
-									strokeLinecap='round'
-									strokeLinejoin='round'
-									strokeWidth={2}
-									d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-								/>
-							</svg>
+			<div className='min-h-screen flex items-center justify-center bg-background'>
+				<Card className='max-w-md mx-4'>
+					<CardContent className='pt-6'>
+						<div className='text-center space-y-4'>
+							<div className='w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto'>
+								<XCircle className='h-6 w-6 text-destructive' />
+							</div>
+							<div className='space-y-2'>
+								<h3 className='font-semibold'>Помилка</h3>
+								<p className='text-sm text-muted-foreground'>{error}</p>
+							</div>
 						</div>
-						<h3 className='text-xl font-semibold text-gray-900 mb-2'>
-							Помилка
-						</h3>
-						<p className='text-gray-600'>{error}</p>
-					</div>
-				</div>
+					</CardContent>
+				</Card>
 			</div>
 		)
 	}
 
 	if (!user) {
 		return (
-			<div className='min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center'>
-				<div className='bg-white rounded-2xl shadow-xl p-8 max-w-md mx-4 border border-blue-100'>
-					<div className='text-center'>
-						<div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-							<svg
-								className='w-8 h-8 text-blue-500'
-								fill='none'
-								stroke='currentColor'
-								viewBox='0 0 24 24'
-							>
-								<path
-									strokeLinecap='round'
-									strokeLinejoin='round'
-									strokeWidth={2}
-									d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
-								/>
-							</svg>
+			<div className='min-h-screen flex items-center justify-center bg-background'>
+				<Card className='max-w-md mx-4'>
+					<CardContent className='pt-6'>
+						<div className='text-center space-y-4'>
+							<div className='w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto'>
+								<Users className='h-6 w-6 text-primary' />
+							</div>
+							<div className='space-y-2'>
+								<h3 className='font-semibold'>Необхідна авторизація</h3>
+								<p className='text-sm text-muted-foreground'>
+									Увійдіть, щоб переглянути вправу
+								</p>
+							</div>
 						</div>
-						<h3 className='text-xl font-semibold text-gray-900 mb-2'>
-							Необхідна авторизація
-						</h3>
-						<p className='text-gray-600'>Увійдіть, щоб переглянути вправу</p>
-					</div>
-				</div>
+					</CardContent>
+				</Card>
 			</div>
 		)
 	}
 
-	const getDifficultyColor = (difficulty: string) => {
+	const getDifficultyVariant = (difficulty: string) => {
 		switch (difficulty?.toLowerCase()) {
 			case 'легкий':
 			case 'легка':
-				return 'bg-green-100 text-green-800 border-green-200'
+				return 'default'
 			case 'середній':
 			case 'середня':
-				return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+				return 'secondary'
 			case 'важкий':
 			case 'важка':
-				return 'bg-red-100 text-red-800 border-red-200'
+				return 'destructive'
 			default:
-				return 'bg-gray-100 text-gray-800 border-gray-200'
+				return 'outline'
 		}
 	}
 
-	const getIntensityColor = (intensity: string) => {
+	const getIntensityVariant = (intensity: string) => {
 		switch (intensity?.toLowerCase()) {
 			case 'низька':
-				return 'bg-blue-100 text-blue-800 border-blue-200'
+				return 'default'
 			case 'помірна':
-				return 'bg-orange-100 text-orange-800 border-orange-200'
+				return 'secondary'
 			case 'висока':
-				return 'bg-purple-100 text-purple-800 border-purple-200'
+				return 'destructive'
 			default:
-				return 'bg-gray-100 text-gray-800 border-gray-200'
+				return 'outline'
 		}
 	}
 
 	return (
-		<div className='min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50'>
+		<div className='min-h-screen bg-background'>
 			<ToastContainer
 				position='top-center'
 				className='!mt-20'
-				toastClassName='!rounded-xl !shadow-xl'
+				toastClassName='!rounded-lg !shadow-lg'
 			/>
 
-			<div className='max-w-6xl mx-auto px-4 py-8'>
-				{/* Header Section */}
+			<div className='container mx-auto px-4 py-8 max-w-7xl'>
+				{/* Header */}
 				<div className='mb-8'>
-					<button
+					<Button
+						variant='ghost'
 						onClick={() => router.push('/dashboard/exercises')}
-						className='inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors duration-200 mb-6 group'
+						className='mb-6 -ml-4'
 					>
-						<svg
-							className='w-5 h-5 transform group-hover:-translate-x-1 transition-transform duration-200'
-							fill='none'
-							stroke='currentColor'
-							viewBox='0 0 24 24'
-						>
-							<path
-								strokeLinecap='round'
-								strokeLinejoin='round'
-								strokeWidth={2}
-								d='M15 19l-7-7 7-7'
-							/>
-						</svg>
-						<span className='font-medium'>Назад до бібліотеки</span>
-					</button>
+						<ArrowLeft className='h-4 w-4 mr-2' />
+						Назад до бібліотеки
+					</Button>
 
-					<div className='bg-white rounded-3xl shadow-xl p-8 border border-gray-100'>
-						<div className='flex items-start justify-between mb-6'>
-							<div>
-								<h1 className='text-4xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'>
+					<Card>
+						<CardHeader>
+							<div className='space-y-4'>
+								<CardTitle className='text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent'>
 									{exercise?.name}
-								</h1>
-								<p className='text-lg text-gray-700 leading-relaxed max-w-3xl'>
+								</CardTitle>
+								<CardDescription className='text-base leading-relaxed'>
 									{exercise?.description}
-								</p>
+								</CardDescription>
 							</div>
-						</div>
-
-						{/* Exercise Info Grid */}
-						<div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6'>
-							{exercise?.equipment && (
-								<div className='bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200'>
-									<div className='flex items-center gap-2 mb-1'>
-										<svg
-											className='w-4 h-4 text-blue-600'
-											fill='none'
-											stroke='currentColor'
-											viewBox='0 0 24 24'
-										>
-											<path
-												strokeLinecap='round'
-												strokeLinejoin='round'
-												strokeWidth={2}
-												d='M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z'
-											/>
-										</svg>
-										<span className='text-xs font-semibold text-blue-700'>
-											Обладнання
-										</span>
+						</CardHeader>
+						<CardContent>
+							{/* Exercise Stats Grid */}
+							<div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6'>
+								{exercise?.equipment && (
+									<div className='bg-blue-50 dark:bg-blue-950/50 rounded-lg p-3 border border-blue-200 dark:border-blue-800'>
+										<div className='flex items-center gap-2 mb-1'>
+											<Dumbbell className='h-3 w-3 text-blue-600' />
+											<span className='text-xs font-medium text-blue-700 dark:text-blue-300'>
+												Обладнання
+											</span>
+										</div>
+										<p className='text-sm font-semibold text-blue-900 dark:text-blue-100'>
+											{exercise.equipment}
+										</p>
 									</div>
-									<p className='text-sm font-medium text-blue-800'>
-										{exercise.equipment}
-									</p>
-								</div>
-							)}
+								)}
 
-							{exercise?.muscleGroup && (
-								<div className='bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200'>
-									<div className='flex items-center gap-2 mb-1'>
-										<svg
-											className='w-4 h-4 text-green-600'
-											fill='none'
-											stroke='currentColor'
-											viewBox='0 0 24 24'
-										>
-											<path
-												strokeLinecap='round'
-												strokeLinejoin='round'
-												strokeWidth={2}
-												d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
-											/>
-										</svg>
-										<span className='text-xs font-semibold text-green-700'>
-											М'язи
-										</span>
+								{exercise?.muscleGroup && (
+									<div className='bg-green-50 dark:bg-green-950/50 rounded-lg p-3 border border-green-200 dark:border-green-800'>
+										<div className='flex items-center gap-2 mb-1'>
+											<Target className='h-3 w-3 text-green-600' />
+											<span className='text-xs font-medium text-green-700 dark:text-green-300'>
+												М'язи
+											</span>
+										</div>
+										<p className='text-sm font-semibold text-green-900 dark:text-green-100'>
+											{exercise.muscleGroup}
+										</p>
 									</div>
-									<p className='text-sm font-medium text-green-800'>
-										{exercise.muscleGroup}
-									</p>
-								</div>
-							)}
+								)}
 
-							{exercise?.difficulty && (
-								<div
-									className={`rounded-xl p-4 border ${getDifficultyColor(
-										exercise.difficulty
-									)}`}
-								>
-									<div className='flex items-center gap-2 mb-1'>
-										<svg
-											className='w-4 h-4'
-											fill='none'
-											stroke='currentColor'
-											viewBox='0 0 24 24'
-										>
-											<path
-												strokeLinecap='round'
-												strokeLinejoin='round'
-												strokeWidth={2}
-												d='M13 10V3L4 14h7v7l9-11h-7z'
-											/>
-										</svg>
-										<span className='text-xs font-semibold'>Складність</span>
+								{exercise?.difficulty && (
+									<div className='bg-orange-50 dark:bg-orange-950/50 rounded-lg p-3 border border-orange-200 dark:border-orange-800'>
+										<div className='flex items-center gap-2 mb-1'>
+											<Zap className='h-3 w-3 text-orange-600' />
+											<span className='text-xs font-medium text-orange-700 dark:text-orange-300'>
+												Складність
+											</span>
+										</div>
+										<p className='text-sm font-semibold text-orange-900 dark:text-orange-100'>
+											{exercise.difficulty}
+										</p>
 									</div>
-									<p className='text-sm font-medium'>{exercise.difficulty}</p>
-								</div>
-							)}
+								)}
 
-							{exercise?.duration && (
-								<div className='bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200'>
-									<div className='flex items-center gap-2 mb-1'>
-										<svg
-											className='w-4 h-4 text-purple-600'
-											fill='none'
-											stroke='currentColor'
-											viewBox='0 0 24 24'
-										>
-											<path
-												strokeLinecap='round'
-												strokeLinejoin='round'
-												strokeWidth={2}
-												d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
-											/>
-										</svg>
-										<span className='text-xs font-semibold text-purple-700'>
-											Тривалість
-										</span>
+								{exercise?.duration && (
+									<div className='bg-purple-50 dark:bg-purple-950/50 rounded-lg p-3 border border-purple-200 dark:border-purple-800'>
+										<div className='flex items-center gap-2 mb-1'>
+											<Timer className='h-3 w-3 text-purple-600' />
+											<span className='text-xs font-medium text-purple-700 dark:text-purple-300'>
+												Тривалість
+											</span>
+										</div>
+										<p className='text-sm font-semibold text-purple-900 dark:text-purple-100'>
+											{exercise.duration} сек
+										</p>
 									</div>
-									<p className='text-sm font-medium text-purple-800'>
-										{exercise.duration} сек
-									</p>
-								</div>
-							)}
+								)}
 
-							{exercise?.reps && (
-								<div className='bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200'>
-									<div className='flex items-center gap-2 mb-1'>
-										<svg
-											className='w-4 h-4 text-orange-600'
-											fill='none'
-											stroke='currentColor'
-											viewBox='0 0 24 24'
-										>
-											<path
-												strokeLinecap='round'
-												strokeLinejoin='round'
-												strokeWidth={2}
-												d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
-											/>
-										</svg>
-										<span className='text-xs font-semibold text-orange-700'>
-											Повторення
-										</span>
+								{exercise?.reps && (
+									<div className='bg-indigo-50 dark:bg-indigo-950/50 rounded-lg p-3 border border-indigo-200 dark:border-indigo-800'>
+										<div className='flex items-center gap-2 mb-1'>
+											<RotateCcw className='h-3 w-3 text-indigo-600' />
+											<span className='text-xs font-medium text-indigo-700 dark:text-indigo-300'>
+												Повторення
+											</span>
+										</div>
+										<p className='text-sm font-semibold text-indigo-900 dark:text-indigo-100'>
+											{exercise.reps}
+										</p>
 									</div>
-									<p className='text-sm font-medium text-orange-800'>
-										{exercise.reps}
-									</p>
-								</div>
-							)}
+								)}
 
-							{exercise?.calories && (
-								<div className='bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200'>
-									<div className='flex items-center gap-2 mb-1'>
-										<svg
-											className='w-4 h-4 text-red-600'
-											fill='none'
-											stroke='currentColor'
-											viewBox='0 0 24 24'
-										>
-											<path
-												strokeLinecap='round'
-												strokeLinejoin='round'
-												strokeWidth={2}
-												d='M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z'
-											/>
-										</svg>
-										<span className='text-xs font-semibold text-red-700'>
-											Калорії
-										</span>
+								{exercise?.calories && (
+									<div className='bg-red-50 dark:bg-red-950/50 rounded-lg p-3 border border-red-200 dark:border-red-800'>
+										<div className='flex items-center gap-2 mb-1'>
+											<Flame className='h-3 w-3 text-red-600' />
+											<span className='text-xs font-medium text-red-700 dark:text-red-300'>
+												Калорії
+											</span>
+										</div>
+										<p className='text-sm font-semibold text-red-900 dark:text-red-100'>
+											{exercise.calories} ккал
+										</p>
 									</div>
-									<p className='text-sm font-medium text-red-800'>
-										{exercise.calories} ккал
-									</p>
-								</div>
-							)}
-						</div>
+								)}
+							</div>
 
-						{/* Additional Info */}
-						<div className='flex flex-wrap gap-3'>
-							{exercise?.intensity && (
-								<span
-									className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${getIntensityColor(
-										exercise.intensity
-									)}`}
-								>
-									<svg
-										className='w-3 h-3'
-										fill='none'
-										stroke='currentColor'
-										viewBox='0 0 24 24'
-									>
-										<path
-											strokeLinecap='round'
-											strokeLinejoin='round'
-											strokeWidth={2}
-											d='M13 10V3L4 14h7v7l9-11h-7z'
-										/>
-									</svg>
-									Інтенсивність: {exercise.intensity}
-								</span>
-							)}
-							{exercise?.restDuration && (
-								<span className='inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 border border-indigo-200'>
-									<svg
-										className='w-3 h-3'
-										fill='none'
-										stroke='currentColor'
-										viewBox='0 0 24 24'
-									>
-										<path
-											strokeLinecap='round'
-											strokeLinejoin='round'
-											strokeWidth={2}
-											d='M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z'
-										/>
-									</svg>
-									Відпочинок: {exercise.restDuration} сек
-								</span>
-							)}
-						</div>
-					</div>
+							{/* Additional Info */}
+							<div className='flex flex-wrap gap-2'>
+								{exercise?.intensity && (
+									<Badge variant={getIntensityVariant(exercise.intensity)}>
+										<Zap className='h-3 w-3 mr-1' />
+										Інтенсивність: {exercise.intensity}
+									</Badge>
+								)}
+								{exercise?.restDuration && (
+									<Badge variant='outline'>
+										<Coffee className='h-3 w-3 mr-1' />
+										Відпочинок: {exercise.restDuration} сек
+									</Badge>
+								)}
+							</div>
+						</CardContent>
+					</Card>
 				</div>
 
 				{/* Main Content Grid */}
@@ -594,368 +503,235 @@ export default function ExerciseDetail({ id }: { id: string }) {
 					<div className='lg:col-span-2 space-y-6'>
 						{/* Video Player */}
 						{exercise?.videoUrl && (
-							<div className='bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100'>
-								<div className='aspect-video'>
-									<ReactPlayer
-										ref={playerRef}
-										url={exercise.videoUrl}
-										width='100%'
-										height='100%'
-										controls
-										// playing={isRunning && !isPaused && progress.type === 'time'}
-										playing={false}
-										className='rounded-t-2xl overflow-hidden'
-										onPlay={() => setIsVideoPlaying(true)}
-										onPause={() => setIsVideoPlaying(false)}
-									/>
-								</div>
-							</div>
+							<Card>
+								<CardContent className='p-0'>
+									<div className='aspect-video rounded-lg overflow-hidden'>
+										<ReactPlayer
+											ref={playerRef}
+											url={exercise.videoUrl}
+											width='100%'
+											height='100%'
+											controls
+											playing={false}
+											onPlay={() => setIsVideoPlaying(true)}
+											onPause={() => setIsVideoPlaying(false)}
+										/>
+									</div>
+								</CardContent>
+							</Card>
 						)}
 
 						{/* Exercise Timer/Counter */}
-						<div className='bg-white rounded-2xl shadow-lg p-6 border border-gray-100'>
-							<h3 className='text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2'>
-								<svg
-									className='w-5 h-5 text-blue-600'
-									fill='none'
-									stroke='currentColor'
-									viewBox='0 0 24 24'
-								>
-									<path
-										strokeLinecap='round'
-										strokeLinejoin='round'
-										strokeWidth={2}
-										d='M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
+						<Card>
+							<CardHeader>
+								<CardTitle className='flex items-center gap-2'>
+									<BarChart3 className='h-5 w-5' />
+									Прогрес вправи
+								</CardTitle>
+							</CardHeader>
+							<CardContent className='space-y-6'>
+								{progress.type === 'time' ? (
+									<ExerciseTimer
+										targetValue={progress.targetValue}
+										remainingTime={remainingTime}
+										isRunning={isRunning}
+										isPaused={isPaused}
+										onPause={handlePause}
+										onResume={handleResume}
+										onReset={handleReset}
 									/>
-								</svg>
-								Прогрес вправи
-							</h3>
+								) : (
+									<ExerciseCounter
+										target={progress.targetValue}
+										current={progress.currentValue}
+										onIncrement={() =>
+											setProgress(prev => ({
+												...prev,
+												currentValue: Math.min(
+													prev.currentValue + 1,
+													prev.targetValue
+												),
+											}))
+										}
+										onDecrement={() =>
+											setProgress(prev => ({
+												...prev,
+												currentValue: Math.max(prev.currentValue - 1, 0),
+											}))
+										}
+									/>
+								)}
 
-							{progress.type === 'time' ? (
-								<ExerciseTimer
-									targetValue={progress.targetValue}
-									remainingTime={remainingTime}
-									isRunning={isRunning}
-									isPaused={isPaused}
-									onPause={handlePause}
-									onResume={handleResume}
-									onReset={handleReset}
-								/>
-							) : (
-								<ExerciseCounter
-									target={progress.targetValue}
-									current={progress.currentValue}
-									onIncrement={() =>
-										setProgress(prev => ({
-											...prev,
-											currentValue: Math.min(
-												prev.currentValue + 1,
-												prev.targetValue
-											),
-										}))
-									}
-									onDecrement={() =>
-										setProgress(prev => ({
-											...prev,
-											currentValue: Math.max(prev.currentValue - 1, 0),
-										}))
-									}
-								/>
-							)}
-
-							{/* Control Buttons */}
-							<div className='flex gap-3 mt-6'>
-								<button
-									onClick={handleStart}
-									disabled={isRunning}
-									className='flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold shadow-lg hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100'
-								>
-									<svg
-										className='w-5 h-5'
-										fill='none'
-										stroke='currentColor'
-										viewBox='0 0 24 24'
+								{/* Control Buttons */}
+								<div className='flex gap-3'>
+									<Button
+										onClick={handleStart}
+										disabled={isRunning}
+										className='flex-1'
+										size='lg'
 									>
-										<path
-											strokeLinecap='round'
-											strokeLinejoin='round'
-											strokeWidth={2}
-											d='M5 3l14 9-14 9V3z'
-										/>
-									</svg>
-									Почати
-								</button>
-								<button
-									onClick={debouncedHandleStop}
-									disabled={
-										isSaving ||
-										(progress.type === 'time'
-											? !isRunning && !isFinished
-											: progress.currentValue === 0)
-									}
-									className='flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-semibold shadow-lg hover:from-red-600 hover:to-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100'
-								>
-									{isSaving ? (
-										<>
-											<div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-											Збереження...
-										</>
-									) : (
-										<>
-											<svg
-												className='w-5 h-5'
-												fill='none'
-												stroke='currentColor'
-												viewBox='0 0 24 24'
-											>
-												<path
-													strokeLinecap='round'
-													strokeLinejoin='round'
-													strokeWidth={2}
-													d='M5 12h14M12 5l7 7-7 7'
-												/>
-											</svg>
-											Завершити
-										</>
-									)}
-								</button>
-							</div>
-						</div>
+										<Play className='h-4 w-4 mr-2' />
+										Почати
+									</Button>
+									<Button
+										onClick={debouncedHandleStop}
+										disabled={
+											isSaving ||
+											(progress.type === 'time'
+												? !isRunning && !isFinished
+												: progress.currentValue === 0)
+										}
+										variant='destructive'
+										className='flex-1'
+										size='lg'
+									>
+										{isSaving ? (
+											<>
+												<Loader2 className='h-4 w-4 mr-2 animate-spin' />
+												Збереження...
+											</>
+										) : (
+											<>
+												<Square className='h-4 w-4 mr-2' />
+												Завершити
+											</>
+										)}
+									</Button>
+								</div>
+							</CardContent>
+						</Card>
 					</div>
 
 					{/* Right Column - Settings & History */}
 					<div className='space-y-6'>
 						{/* Exercise Settings */}
 						{exercise && (
-							<div className='bg-white rounded-2xl shadow-lg p-6 border border-gray-100'>
-								<h3 className='text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2'>
-									<svg
-										className='w-5 h-5 text-purple-600'
-										fill='none'
-										stroke='currentColor'
-										viewBox='0 0 24 24'
-									>
-										<path
-											strokeLinecap='round'
-											strokeLinejoin='round'
-											strokeWidth={2}
-											d='M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z'
-										/>
-										<path
-											strokeLinecap='round'
-											strokeLinejoin='round'
-											strokeWidth={2}
-											d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'
-										/>
-									</svg>
-									Налаштування
-								</h3>
-								<ExerciseSettings
-									exercise={exercise}
-									onSettingsChange={handleSettingsChange}
-								/>
-							</div>
+							<Card>
+								<CardHeader>
+									<CardTitle className='flex items-center gap-2'>
+										<Settings className='h-5 w-5' />
+										Налаштування
+									</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<ExerciseSettings
+										exercise={exercise}
+										onSettingsChange={handleSettingsChange}
+									/>
+								</CardContent>
+							</Card>
 						)}
 
 						{/* Progress History */}
-						<div className='bg-white rounded-2xl shadow-lg p-6 border border-gray-100'>
-							<h3 className='text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2'>
-								<svg
-									className='w-5 h-5 text-indigo-600'
-									fill='none'
-									stroke='currentColor'
-									viewBox='0 0 24 24'
-								>
-									<path
-										strokeLinecap='round'
-										strokeLinejoin='round'
-										strokeWidth={2}
-										d='M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
-									/>
-								</svg>
-								Історія прогресу
-							</h3>
+						<Card>
+							<CardHeader>
+								<CardTitle className='flex items-center gap-2'>
+									<Clock className='h-5 w-5' />
+									Історія прогресу
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								{progressHistory.length > 0 ? (
+									<ScrollArea className='h-96'>
+										<div className='space-y-3'>
+											{progressHistory.map((entry, index) => {
+												const unit =
+													entry.type === ExerciseType.TIME
+														? 'секунд'
+														: 'повторень'
+												const displayValue = `${entry.value} / ${entry.targetValue} ${unit}`
+												const completionPercentage =
+													(entry.value / entry.targetValue) * 100
 
-							{progressHistory.length > 0 ? (
-								<div className='space-y-3 max-h-96 overflow-y-auto custom-scrollbar'>
-									{progressHistory.map((entry, index) => {
-										const unit =
-											entry.type === ExerciseType.TIME ? 'секунд' : 'повторень'
-										const displayValue = `${entry.value} / ${entry.targetValue} ${unit}`
-										const completionPercentage =
-											(entry.value / entry.targetValue) * 100
-
-										return (
-											<div
-												key={entry.id}
-												className='group bg-gradient-to-r from-gray-50 to-gray-100 hover:from-blue-50 hover:to-purple-50 rounded-xl p-4 border border-gray-200 hover:border-blue-200 transition-all duration-200'
-											>
-												{/* Date Header */}
-												<div className='flex items-center justify-between mb-3'>
-													<div className='flex items-center gap-2'>
-														<div className='w-2 h-2 bg-blue-500 rounded-full'></div>
-														<span className='text-sm font-medium text-gray-900'>
-															{new Date(entry.completedAt).toLocaleDateString(
-																'uk-UA',
-																{
-																	day: 'numeric',
-																	month: 'short',
-																	year: 'numeric',
-																}
-															)}
-														</span>
-														<span className='text-xs text-gray-500'>
-															{new Date(entry.completedAt).toLocaleTimeString(
-																'uk-UA',
-																{
-																	hour: '2-digit',
-																	minute: '2-digit',
-																}
-															)}
-														</span>
-													</div>
-													<span
-														className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-															entry.completed
-																? 'bg-green-100 text-green-800 border border-green-200'
-																: 'bg-orange-100 text-orange-800 border border-orange-200'
-														}`}
+												return (
+													<div
+														key={entry.id}
+														className='rounded-lg border p-4 space-y-3'
 													>
-														{entry.completed ? (
-															<>
-																<svg
-																	className='w-3 h-3'
-																	fill='none'
-																	stroke='currentColor'
-																	viewBox='0 0 24 24'
-																>
-																	<path
-																		strokeLinecap='round'
-																		strokeLinejoin='round'
-																		strokeWidth={2}
-																		d='M5 13l4 4L19 7'
-																	/>
-																</svg>
-																Завершено
-															</>
-														) : (
-															<>
-																<svg
-																	className='w-3 h-3'
-																	fill='none'
-																	stroke='currentColor'
-																	viewBox='0 0 24 24'
-																>
-																	<path
-																		strokeLinecap='round'
-																		strokeLinejoin='round'
-																		strokeWidth={2}
-																		d='M12 8v4l3 3'
-																	/>
-																</svg>
-																Не завершено
-															</>
-														)}
-													</span>
-												</div>
+														<div className='flex items-center justify-between'>
+															<div className='flex items-center gap-2 text-sm'>
+																<div className='w-2 h-2 bg-primary rounded-full' />
+																<span className='font-medium'>
+																	{new Date(
+																		entry.completedAt
+																	).toLocaleDateString('uk-UA', {
+																		day: 'numeric',
+																		month: 'short',
+																		year: 'numeric',
+																	})}
+																</span>
+																<span className='text-muted-foreground'>
+																	{new Date(
+																		entry.completedAt
+																	).toLocaleTimeString('uk-UA', {
+																		hour: '2-digit',
+																		minute: '2-digit',
+																	})}
+																</span>
+															</div>
+															<Badge
+																variant={
+																	entry.completed ? 'default' : 'secondary'
+																}
+															>
+																{entry.completed ? (
+																	<>
+																		<CheckCircle2 className='h-3 w-3 mr-1' />
+																		Завершено
+																	</>
+																) : (
+																	<>
+																		<Clock className='h-3 w-3 mr-1' />
+																		Не завершено
+																	</>
+																)}
+															</Badge>
+														</div>
 
-												{/* Progress Bar */}
-												<div className='mb-3'>
-													<div className='flex items-center justify-between text-sm mb-1'>
-														<span className='font-medium text-gray-700'>
-															{displayValue}
-														</span>
-														<span className='text-gray-500'>
-															{Math.round(completionPercentage)}%
-														</span>
-													</div>
-													<div className='w-full bg-gray-200 rounded-full h-2'>
-														<div
-															className={`h-2 rounded-full transition-all duration-300 ${
-																entry.completed
-																	? 'bg-gradient-to-r from-green-400 to-green-600'
-																	: 'bg-gradient-to-r from-orange-400 to-orange-600'
-															}`}
-															style={{
-																width: `${Math.min(
-																	completionPercentage,
-																	100
-																)}%`,
-															}}
-														></div>
-													</div>
-												</div>
-
-												{/* Additional Stats */}
-												{entry.pauseCount > 0 && (
-													<div className='flex items-center gap-2 text-xs text-gray-600'>
-														<svg
-															className='w-3 h-3'
-															fill='none'
-															stroke='currentColor'
-															viewBox='0 0 24 24'
-														>
-															<path
-																strokeLinecap='round'
-																strokeLinejoin='round'
-																strokeWidth={2}
-																d='M10 9v6m4-6v6'
+														<div className='space-y-2'>
+															<div className='flex items-center justify-between text-sm'>
+																<span className='font-medium'>
+																	{displayValue}
+																</span>
+																<span className='text-muted-foreground'>
+																	{Math.round(completionPercentage)}%
+																</span>
+															</div>
+															<Progress
+																value={Math.min(completionPercentage, 100)}
+																className='h-2'
 															/>
-														</svg>
-														<span>Паузи: {entry.pauseCount}</span>
+														</div>
+
+														{entry.pauseCount > 0 && (
+															<div className='flex items-center gap-2 text-xs text-muted-foreground'>
+																<Pause className='h-3 w-3' />
+																<span>Паузи: {entry.pauseCount}</span>
+															</div>
+														)}
 													</div>
-												)}
-											</div>
-										)
-									})}
-								</div>
-							) : (
-								<div className='text-center py-8'>
-									<div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-										<svg
-											className='w-8 h-8 text-gray-400'
-											fill='none'
-											stroke='currentColor'
-											viewBox='0 0 24 24'
-										>
-											<path
-												strokeLinecap='round'
-												strokeLinejoin='round'
-												strokeWidth={2}
-												d='M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
-											/>
-										</svg>
+												)
+											})}
+										</div>
+									</ScrollArea>
+								) : (
+									<div className='text-center py-8 space-y-4'>
+										<div className='w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto'>
+											<BarChart3 className='h-6 w-6 text-muted-foreground' />
+										</div>
+										<div className='space-y-2'>
+											<h4 className='font-medium'>Історія порожня</h4>
+											<p className='text-sm text-muted-foreground'>
+												Почніть виконувати вправу, щоб побачити свій прогрес
+											</p>
+										</div>
 									</div>
-									<h4 className='text-lg font-medium text-gray-900 mb-2'>
-										Історія порожня
-									</h4>
-									<p className='text-gray-500'>
-										Почніть виконувати вправу, щоб побачити свій прогрес
-									</p>
-								</div>
-							)}
-						</div>
+								)}
+							</CardContent>
+						</Card>
 					</div>
 				</div>
 			</div>
-
-			{/* Custom Scrollbar Styles */}
-			<style jsx>{`
-				.custom-scrollbar::-webkit-scrollbar {
-					width: 6px;
-				}
-				.custom-scrollbar::-webkit-scrollbar-track {
-					background: #f1f5f9;
-					border-radius: 3px;
-				}
-				.custom-scrollbar::-webkit-scrollbar-thumb {
-					background: #cbd5e1;
-					border-radius: 3px;
-				}
-				.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-					background: #94a3b8;
-				}
-			`}</style>
 		</div>
 	)
 }

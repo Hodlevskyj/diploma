@@ -496,6 +496,7 @@ export default function WorkoutPlan() {
 					<option value='Lose Belly Fat'>Схуднення живота</option>
 					<option value='Muscle Gain'>Набір м’язової маси</option>
 					<option value='Flexibility'>Гнучкість</option>
+					<option value='ARMS'>Руки</option>
 				</select>
 				<select
 					multiple

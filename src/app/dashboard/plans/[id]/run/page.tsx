@@ -1,6 +1,11 @@
 'use client'
 import { Button } from '@/components/ui/button'
-import { completePlan, getPlan, savePartialProgress } from '@/lib/api'
+import {
+	completePlan,
+	getPlan,
+	getPlanExercises,
+	savePartialProgress,
+} from '@/lib/api'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import ExerciseStep from '../../../../../components/exercise/ExerciseStep'
@@ -10,6 +15,7 @@ export default function PlanRunPage() {
 	const router = useRouter()
 	const planId = Number(params?.id)
 	const [plan, setPlan] = useState<any>(null)
+	const [planExercises, setPlanExercises] = useState<any[]>([])
 	const [loading, setLoading] = useState(true)
 	const [step, setStep] = useState(0)
 	const [results, setResults] = useState<any[]>([])
@@ -22,10 +28,58 @@ export default function PlanRunPage() {
 	useEffect(() => {
 		if (!planId) return
 		setLoading(true)
+
+		// Завантажуємо основну інформацію про план
 		getPlan(planId)
-			.then(setPlan)
-			.catch(e => setError(e.message))
-			.finally(() => setLoading(false))
+			.then(data => {
+				setPlan(data)
+
+				// Перевіряємо, чи є вправи в плані
+				if (
+					data.exercises &&
+					Array.isArray(data.exercises) &&
+					data.exercises.length > 0
+				) {
+					// Якщо вправи вже є в даних плану, використовуємо їх
+					setPlanExercises(
+						data.exercises.sort((a: any, b: any) => a.order - b.order)
+					)
+					setLoading(false)
+				} else if (
+					data.WorkoutDay &&
+					Array.isArray(data.WorkoutDay) &&
+					data.WorkoutDay.length > 0
+				) {
+					// Якщо є дні тренувань, витягуємо вправи з них
+					const allExercises = data.WorkoutDay.flatMap((day: any) =>
+						day.exercises
+							? day.exercises.map((ex: any) => ({
+									...ex,
+									dayId: day.id,
+									dayNumber: day.dayNumber,
+							  }))
+							: []
+					)
+					setPlanExercises(
+						allExercises.sort((a: any, b: any) => a.order - b.order)
+					)
+					setLoading(false)
+				} else {
+					// Якщо вправ немає в основних даних, робимо додатковий запит
+					getPlanExercises(planId)
+						.then(exercises => {
+							setPlanExercises(
+								exercises.sort((a: any, b: any) => a.order - b.order)
+							)
+						})
+						.catch(e => setError(e.message))
+						.finally(() => setLoading(false))
+				}
+			})
+			.catch(e => {
+				setError(e.message)
+				setLoading(false)
+			})
 	}, [planId])
 
 	useEffect(() => {
@@ -53,16 +107,19 @@ export default function PlanRunPage() {
 	if (loading) return <div className='p-8 text-center'>Завантаження...</div>
 	if (error) return <div className='p-8 text-center text-red-500'>{error}</div>
 	if (!plan) return <div className='p-8 text-center'>План не знайдено</div>
+	if (planExercises.length === 0) {
+		return <div className='p-8 text-center'>План не містить вправ</div>
+	}
 
-	const exercises = plan.exercises
-		.slice()
-		.sort((a: any, b: any) => a.order - b.order)
-	const currentExercise = exercises[step]
+	const currentExercise = planExercises[step]
 
 	const handleExerciseComplete = (result: any) => {
 		setResults(prev => [
 			...prev,
-			{ ...result, exerciseId: currentExercise.exerciseId },
+			{
+				...result,
+				exerciseId: currentExercise.exerciseId || currentExercise.exercise?.id,
+			},
 		])
 		if (currentExercise.restDuration && currentExercise.restDuration > 0) {
 			setIsResting(true)
@@ -73,7 +130,7 @@ export default function PlanRunPage() {
 	}
 
 	const goToNextStep = () => {
-		if (step < exercises.length - 1) {
+		if (step < planExercises.length - 1) {
 			setStep(step + 1)
 		} else {
 			setFinished(true)
@@ -107,7 +164,7 @@ export default function PlanRunPage() {
 		<div className='max-w-xl mx-auto py-8'>
 			<h1 className='text-3xl font-bold mb-6 text-center'>{plan.name}</h1>
 			<div className='mb-4 text-center'>
-				Крок {step + 1} з {exercises.length}
+				Крок {step + 1} з {planExercises.length}
 			</div>
 			{isResting ? (
 				<div className='text-center text-lg font-semibold my-8'>
@@ -116,7 +173,7 @@ export default function PlanRunPage() {
 			) : (
 				<ExerciseStep
 					exercise={{
-						...currentExercise.exercise,
+						...(currentExercise.exercise || {}),
 						type: currentExercise.type,
 						reps: currentExercise.reps,
 						duration: currentExercise.duration,

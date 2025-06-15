@@ -1,23 +1,13 @@
 'use client'
-
 import { Button } from '@/components/ui/button'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
 	Form,
 	FormControl,
-	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
-	FormMessage,
 } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
 import {
 	Select,
 	SelectContent,
@@ -25,7 +15,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { Slider } from '@/components/ui/slider'
 import { generateWorkoutPlan } from '@/lib/api'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
@@ -44,6 +33,8 @@ const formSchema = z.object({
 	height: z.number().min(100).max(250).optional(),
 	weight: z.number().min(30).max(250).optional(),
 	age: z.number().min(16).max(100).optional(),
+	difficultyLevel: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']),
+	equipmentType: z.enum(['NONE', 'MINIMAL', 'HOME_GYM', 'FULL_GYM']),
 })
 
 export default function GeneratePlanPage() {
@@ -59,6 +50,8 @@ export default function GeneratePlanPage() {
 			height: undefined,
 			weight: undefined,
 			age: undefined,
+			difficultyLevel: 'INTERMEDIATE',
+			equipmentType: 'MINIMAL',
 		},
 	})
 
@@ -84,10 +77,10 @@ export default function GeneratePlanPage() {
 			<Card className='max-w-2xl mx-auto'>
 				<CardHeader>
 					<CardTitle>Параметри плану</CardTitle>
-					<CardDescription>
+					<p className='text-muted-foreground'>
 						Введіть ваші фізичні параметри та побажання для створення
 						оптимального плану тренувань
-					</CardDescription>
+					</p>
 				</CardHeader>
 				<CardContent>
 					<Form {...form}>
@@ -113,14 +106,10 @@ export default function GeneratePlanPage() {
 													Набір м'язової маси
 												</SelectItem>
 												<SelectItem value='STAY_ACTIVE'>
-													Підтримка форми
+													Підтримка активності
 												</SelectItem>
 											</SelectContent>
 										</Select>
-										<FormDescription>
-											Ваша основна фітнес-ціль визначить тип вправ у плані
-										</FormDescription>
-										<FormMessage />
 									</FormItem>
 								)}
 							/>
@@ -130,110 +119,84 @@ export default function GeneratePlanPage() {
 								name='daysPerWeek'
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>
-											Кількість днів на тиждень: {field.value}
-										</FormLabel>
-										<FormControl>
-											<Slider
-												min={1}
-												max={7}
-												step={1}
-												defaultValue={[field.value]}
-												onValueChange={vals => field.onChange(vals[0])}
-											/>
-										</FormControl>
-										<FormDescription>
-											Скільки днів на тиждень ви готові тренуватися
-										</FormDescription>
-										<FormMessage />
+										<FormLabel>Кількість днів на тиждень</FormLabel>
+										<Select
+											onValueChange={value => field.onChange(parseInt(value))}
+											defaultValue={field.value.toString()}
+										>
+											<FormControl>
+												<SelectTrigger>
+													<SelectValue placeholder='Виберіть кількість днів' />
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												{[2, 3, 4, 5, 6].map(day => (
+													<SelectItem key={day} value={day.toString()}>
+														{day} днів
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
 									</FormItem>
 								)}
 							/>
 
 							<FormField
 								control={form.control}
-								name='preferredDuration'
+								name='difficultyLevel'
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>
-											Бажана тривалість тренування (хв): {field.value}
-										</FormLabel>
-										<FormControl>
-											<Slider
-												min={15}
-												max={120}
-												step={5}
-												defaultValue={[field.value || 45]}
-												onValueChange={vals => field.onChange(vals[0])}
-											/>
-										</FormControl>
-										<FormDescription>
-											Скільки часу ви готові витрачати на одне тренування
-										</FormDescription>
-										<FormMessage />
+										<FormLabel>Рівень складності</FormLabel>
+										<Select
+											onValueChange={field.onChange}
+											defaultValue={field.value}
+										>
+											<FormControl>
+												<SelectTrigger>
+													<SelectValue placeholder='Виберіть рівень складності' />
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												<SelectItem value='BEGINNER'>Початківець</SelectItem>
+												<SelectItem value='INTERMEDIATE'>Середній</SelectItem>
+												<SelectItem value='ADVANCED'>Просунутий</SelectItem>
+											</SelectContent>
+										</Select>
 									</FormItem>
 								)}
 							/>
 
-							<div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-								<FormField
-									control={form.control}
-									name='height'
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Зріст (см)</FormLabel>
+							<FormField
+								control={form.control}
+								name='equipmentType'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Доступне обладнання</FormLabel>
+										<Select
+											onValueChange={field.onChange}
+											defaultValue={field.value}
+										>
 											<FormControl>
-												<Input
-													type='number'
-													placeholder='Введіть зріст'
-													{...field}
-													onChange={e => field.onChange(e.target.valueAsNumber)}
-												/>
+												<SelectTrigger>
+													<SelectValue placeholder='Виберіть тип обладнання' />
+												</SelectTrigger>
 											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
-									name='weight'
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Вага (кг)</FormLabel>
-											<FormControl>
-												<Input
-													type='number'
-													placeholder='Введіть вагу'
-													{...field}
-													onChange={e => field.onChange(e.target.valueAsNumber)}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
-									name='age'
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Вік</FormLabel>
-											<FormControl>
-												<Input
-													type='number'
-													placeholder='Введіть вік'
-													{...field}
-													onChange={e => field.onChange(e.target.valueAsNumber)}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
-
+											<SelectContent>
+												<SelectItem value='NONE'>Без обладнання</SelectItem>
+												<SelectItem value='MINIMAL'>
+													Мінімальне обладнання
+												</SelectItem>
+												<SelectItem value='HOME_GYM'>
+													Домашній спортзал
+												</SelectItem>
+												<SelectItem value='FULL_GYM'>
+													Повноцінний спортзал
+												</SelectItem>
+											</SelectContent>
+										</Select>
+									</FormItem>
+								)}
+							/>
 							<Button type='submit' className='w-full' disabled={isLoading}>
 								{isLoading ? (
 									<>

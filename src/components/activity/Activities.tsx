@@ -506,9 +506,6 @@ export default function Activities() {
 											{activity.polyline ? (
 												<div className='mt-4 bg-gray-100 rounded-lg p-4 relative z-10'>
 													<StravaMap summaryPolyline={activity.polyline} />
-													<div className='text-center text-gray-500'>
-														Map visualization would appear here
-													</div>
 												</div>
 											) : (
 												<div className='mt-4 text-center text-gray-400 text-sm'>

@@ -1,5 +1,6 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { STRAVA_CONFIG } from '../../app/config/strava'
 
@@ -22,12 +23,15 @@ export default function StravaLoginButton() {
 	}
 
 	return (
-		<button
+		<Button
 			onClick={handleStravaLogin}
 			disabled={isLoading}
-			className='bg-[#FC4C02] text-white px-4 py-2 rounded flex items-center gap-2'
+			className='bg-[#FC4C02] hover:bg-[#FC4C02]/90 text-white flex items-center gap-2'
 		>
+			<svg className='w-5 h-5' viewBox='0 0 24 24' fill='currentColor'>
+				<path d='M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.599h4.172L10.463 0l-7 13.828h4.917' />
+			</svg>
 			{isLoading ? 'Connecting...' : 'Connect with Strava'}
-		</button>
+		</Button>
 	)
 }
