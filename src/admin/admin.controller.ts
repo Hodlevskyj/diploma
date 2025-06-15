@@ -15,10 +15,10 @@ import {
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ExerciseService } from '../exercise/exercise.service';
 import { CreateExerciseDto } from '../planexercise/plansexercise.dto';
-import { PrismaService } from '../prisma.service';
 import { AdminGuard } from './admin.guard';
 
 @UseGuards(JwtAuthGuard, AdminGuard)
@@ -161,7 +161,7 @@ export class AdminController {
   @Delete('plans/:id')
   async deletePlan(@Param('id', ParseIntPipe) id: number) {
     try {
-      // Спочатку видаляємо пов'язані записи
+      // видаляємо пов'язані записи
       await this.prisma.workoutPlanExercise.deleteMany({
         where: {
           workoutDay: {
