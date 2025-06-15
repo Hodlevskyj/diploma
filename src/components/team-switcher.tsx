@@ -1,93 +1,4 @@
-// 'use client'
-
-// import { ChevronDown, Plus } from 'lucide-react'
-// import * as React from 'react'
-
-// import {
-// 	DropdownMenu,
-// 	DropdownMenuContent,
-// 	DropdownMenuItem,
-// 	DropdownMenuLabel,
-// 	DropdownMenuSeparator,
-// 	DropdownMenuShortcut,
-// 	DropdownMenuTrigger,
-// } from '@/components/ui/dropdown-menu'
-// import {
-// 	SidebarMenu,
-// 	SidebarMenuButton,
-// 	SidebarMenuItem,
-// } from '@/components/ui/sidebar'
-
-// export function TeamSwitcher({
-// 	teams,
-// }: {
-// 	teams: {
-// 		name: string
-// 		logo: React.ElementType
-// 		plan: string
-// 	}[]
-// 	user: {
-// 		name: string
-// 		email: string
-// 		avatar: string
-// 	} | null
-// }) {
-// 	const [activeTeam, setActiveTeam] = React.useState(teams[0])
-
-// 	if (!activeTeam) {
-// 		return null
-// 	}
-
-// 	return (
-// 		<SidebarMenu>
-// 			<SidebarMenuItem>
-// 				<DropdownMenu>
-// 					<DropdownMenuTrigger asChild>
-// 						<SidebarMenuButton className='w-fit px-1.5'>
-// 							<div className='flex aspect-square size-5 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground'>
-// 								<activeTeam.logo className='size-3' />
-// 							</div>
-// 							<span className='truncate font-semibold'>{activeTeam.name}</span>
-// 							<ChevronDown className='opacity-50' />
-// 						</SidebarMenuButton>
-// 					</DropdownMenuTrigger>
-// 					<DropdownMenuContent
-// 						className='w-64 rounded-lg'
-// 						align='start'
-// 						side='bottom'
-// 						sideOffset={4}
-// 					>
-// 						<DropdownMenuLabel className='text-xs text-muted-foreground'>
-// 							Teams
-// 						</DropdownMenuLabel>
-// 						{teams.map((team, index) => (
-// 							<DropdownMenuItem
-// 								key={team.name}
-// 								onClick={() => setActiveTeam(team)}
-// 								className='gap-2 p-2'
-// 							>
-// 								<div className='flex size-6 items-center justify-center rounded-sm border'>
-// 									<team.logo className='size-4 shrink-0' />
-// 								</div>
-// 								{team.name}
-// 								<DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
-// 							</DropdownMenuItem>
-// 						))}
-// 						<DropdownMenuSeparator />
-// 						<DropdownMenuItem className='gap-2 p-2'>
-// 							<div className='flex size-6 items-center justify-center rounded-md border bg-background'>
-// 								<Plus className='size-4' />
-// 							</div>
-// 							<div className='font-medium text-muted-foreground'>Add team</div>
-// 						</DropdownMenuItem>
-// 					</DropdownMenuContent>
-// 				</DropdownMenu>
-// 			</SidebarMenuItem>
-// 		</SidebarMenu>
-// 	)
-// }
-
-import { Check, ChevronsUpDown, PlusCircle } from 'lucide-react'
+import { ChevronsUpDown } from 'lucide-react'
 import * as React from 'react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -96,7 +7,6 @@ import {
 	Command,
 	CommandEmpty,
 	CommandGroup,
-	CommandInput,
 	CommandItem,
 	CommandList,
 	CommandSeparator,
@@ -108,7 +18,6 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -124,7 +33,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
+import { useAuth } from '@/context/AuthContext'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface TeamSwitcherProps {
 	teams: {
@@ -143,6 +54,8 @@ export function TeamSwitcher({ teams, user }: TeamSwitcherProps) {
 	const [open, setOpen] = React.useState(false)
 	const [showNewTeamDialog, setShowNewTeamDialog] = React.useState(false)
 	const [selectedTeam, setSelectedTeam] = React.useState(teams[0])
+	const { logout } = useAuth()
+	const router = useRouter()
 
 	return (
 		<Dialog open={showNewTeamDialog} onOpenChange={setShowNewTeamDialog}>
@@ -187,7 +100,7 @@ export function TeamSwitcher({ teams, user }: TeamSwitcherProps) {
 				<PopoverContent className='w-[var(--radix-popover-trigger-width)] p-0'>
 					<Command>
 						<CommandList>
-							<CommandInput placeholder='Search team...' />
+							{/* <CommandInput placeholder='Search team...' /> */}
 							<CommandEmpty>No team found.</CommandEmpty>
 							{user && (
 								<CommandGroup heading='Профіль'>
@@ -201,18 +114,19 @@ export function TeamSwitcher({ teams, user }: TeamSwitcherProps) {
 										</Link>
 									</CommandItem>
 									<CommandItem className='text-sm'>
-										<Link href='/settings' className='flex items-center w-full'>
-											<span>Налаштування</span>
-										</Link>
-									</CommandItem>
-									<CommandItem className='text-sm'>
-										<Link href='/logout' className='flex items-center w-full'>
-											<span>Вийти</span>
+										<Link
+											onClick={() => logout()}
+											href={''}
+											className='flex items-center w-full'
+										>
+											<span className='text-destructive font-medium'>
+												Вийти
+											</span>
 										</Link>
 									</CommandItem>
 								</CommandGroup>
 							)}
-							<CommandGroup heading='Teams'>
+							{/* <CommandGroup heading='Teams'>
 								{teams.map(team => (
 									<CommandItem
 										key={team.name}
@@ -238,10 +152,10 @@ export function TeamSwitcher({ teams, user }: TeamSwitcherProps) {
 										)}
 									</CommandItem>
 								))}
-							</CommandGroup>
+							</CommandGroup> */}
 						</CommandList>
 						<CommandSeparator />
-						<CommandList>
+						{/* <CommandList>
 							<CommandGroup>
 								<DialogTrigger asChild>
 									<CommandItem
@@ -255,7 +169,7 @@ export function TeamSwitcher({ teams, user }: TeamSwitcherProps) {
 									</CommandItem>
 								</DialogTrigger>
 							</CommandGroup>
-						</CommandList>
+						</CommandList> */}
 					</Command>
 				</PopoverContent>
 			</Popover>

@@ -1,17 +1,4 @@
 'use client'
-
-import {
-	ArrowBigLeft,
-	ArrowUpCircleIcon,
-	BarChartIcon,
-	CameraIcon,
-	Dumbbell,
-	FileCodeIcon,
-	FileTextIcon,
-	Notebook,
-} from 'lucide-react'
-import * as React from 'react'
-
 import { NavMain } from '@/components/nav-main'
 import { NavSecondary } from '@/components/nav-secondary'
 import {
@@ -23,6 +10,17 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import {
+	ArrowBigLeft,
+	ArrowUpCircleIcon,
+	CameraIcon,
+	Dumbbell,
+	FileCodeIcon,
+	FileTextIcon,
+	User,
+} from 'lucide-react'
+import Link from 'next/link'
+import * as React from 'react'
 
 const data = {
 	navMain: [
@@ -31,15 +29,15 @@ const data = {
 			url: '/admin/exercises',
 			icon: Dumbbell,
 		},
+		// {
+		// 	title: 'Плани',
+		// 	url: '/admin/plans',
+		// 	icon: Notebook,
+		// },
 		{
-			title: 'Статистика',
-			url: '/admin/dashboard',
-			icon: BarChartIcon,
-		},
-		{
-			title: 'Плани',
-			url: '/admin/plans',
-			icon: Notebook,
+			title: 'Користувачі',
+			url: '/admin',
+			icon: User,
 		},
 		{
 			title: 'Повернутися назад',
@@ -95,40 +93,7 @@ const data = {
 			],
 		},
 	],
-	navSecondary: [
-		// {
-		// 	title: 'Settings',
-		// 	url: '#',
-		// 	icon: SettingsIcon,
-		// },
-		// {
-		// 	title: 'Get Help',
-		// 	url: '#',
-		// 	icon: HelpCircleIcon,
-		// },
-		// {
-		// 	title: 'Search',
-		// 	url: '#',
-		// 	icon: SearchIcon,
-		// },
-	],
-	// documents: [
-	// {
-	// 	name: 'Data Library',
-	// 	url: '#',
-	// 	icon: DatabaseIcon,
-	// },
-	// {
-	// 	name: 'Reports',
-	// 	url: '#',
-	// 	icon: ClipboardListIcon,
-	// },
-	// {
-	// 	name: 'Word Assistant',
-	// 	url: '#',
-	// 	icon: FileIcon,
-	// },
-	// ],
+	navSecondary: [],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -141,17 +106,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							asChild
 							className='data-[slot=sidebar-menu-button]:!p-1.5'
 						>
-							<a href='#'>
+							<Link href='/dashboard'>
 								<ArrowUpCircleIcon className='h-5 w-5' />
 								<span className='text-base font-semibold'>FitnessApp</span>
-							</a>
+							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>
 			</SidebarHeader>
 			<SidebarContent className='mt-4'>
-				{' '}
-				{/* Додайте відступ зверху */}
 				<NavMain items={data.navMain} />
 				<NavSecondary items={data.navSecondary} className='mt-auto' />
 			</SidebarContent>
