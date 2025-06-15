@@ -50,7 +50,6 @@ lerna-debug.log*
 # Runtime data
 pids
 *.pid
-*.seed
 *.pid.lock
 
 # Diagnostic reports (https://nodejs.org/api/report.html)

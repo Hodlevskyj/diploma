@@ -1,7 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
-import * as express from 'express';
-import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -11,8 +9,6 @@ async function bootstrap() {
     origin: 'http://localhost:3000',
     credentials: true,
   });
-  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
-  // app.use(multer().single('file'));
   await app.listen(4000);
 }
 bootstrap();

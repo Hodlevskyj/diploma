@@ -55,6 +55,63 @@ enum GoalType {
   STAY_ACTIVE
 }
 
+model WorkoutDay {
+  id            Int                   @id @default(autoincrement())
+  workoutPlanId Int
+  dayNumber     Int
+  name          String?
+  scheduledDate DateTime?
+  isCompleted   Boolean               @default(false)
+  completedAt   DateTime?
+  workoutPlan   WorkoutPlan           @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+  exercises     WorkoutPlanExercise[]
+
+  @@index([workoutPlanId])
+}
+
+model WorkoutPlanExercise {
+  id            Int         @id @default(autoincrement())
+  workoutPlanId Int
+  workoutDayId  Int
+  exerciseId    Int
+  order         Int
+  reps          Int?
+  duration      Int?
+  restDuration  Int?
+  videoUrl      String?
+  isCompleted   Boolean     @default(false)
+  completedAt   DateTime?
+  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+  workoutDay    WorkoutDay  @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
+  exercise      Exercise    @relation(fields: [exerciseId], references: [id])
+
+  @@index([workoutPlanId])
+  @@index([workoutDayId])
+  @@index([exerciseId])
+}
+
+model WorkoutPlan {
+  id                    Int                     @id @default(autoincrement())
+  userId                Int
+  name                  String
+  description           String?
+  fitnessGoal           String?
+  status                String                  @default("IN_PROGRESS")
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  startDate             DateTime?
+  difficultyLevel       String?
+  equipmentType         String?
+  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  WorkoutDay            WorkoutDay[]
+  exercises             WorkoutPlanExercise[]
+  TrackedExercise       TrackedExercise[]
+  WorkoutPlanCompletion WorkoutPlanCompletion[]
+  FavoritePlan          FavoritePlan[]
+
+  @@index([userId])
+}
+
 enum ExerciseType {
   REPS
   TIME
@@ -146,38 +203,6 @@ model Exercise {
   @@index([exerciseCategoryId])
 }
 
-model WorkoutPlan {
-  id               Int                     @id @default(autoincrement())
-  userId           Int
-  user             User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name             String
-  description      String?
-  fitnessGoal      GoalType?
-  status           PlanStatus              @default(IN_PROGRESS)
-  createdAt        DateTime                @default(now())
-  updatedAt        DateTime                @updatedAt
-  exercises        WorkoutPlanExercise[]
-  completions      WorkoutPlanCompletion[]
-  schedules        WorkoutPlanSchedule[]
-  trackedExercises TrackedExercise[]
-  FavoritePlan     FavoritePlan[]
-  WorkoutDay       WorkoutDay[]
-}
-
-model WorkoutPlanExercise {
-  id            Int         @id @default(autoincrement())
-  workoutPlanId Int
-  exerciseId    Int
-  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
-  exercise      Exercise    @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
-  order         Int
-  reps          Int?        @default(0)
-  duration      Int?        @default(0)
-  restDuration  Int?        @default(0)
-  workoutDayId  Int?
-  workoutDay    WorkoutDay? @relation(fields: [workoutDayId], references: [id])
-}
-
 model WorkoutPlanCompletion {
   id            Int         @id @default(autoincrement())
   workoutPlanId Int
@@ -187,22 +212,6 @@ model WorkoutPlanCompletion {
   completedAt   DateTime    @default(now())
   Exercise      Exercise?   @relation(fields: [exerciseId], references: [id])
   exerciseId    Int?
-}
-
-model WorkoutPlanSchedule {
-  id            Int         @id @default(autoincrement())
-  workoutPlanId Int
-  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
-  date          DateTime
-}
-
-model WorkoutDay {
-  id            Int                   @id @default(autoincrement())
-  workoutPlan   WorkoutPlan           @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
-  workoutPlanId Int
-  dayNumber     Int
-  name          String?
-  exercises     WorkoutPlanExercise[]
 }
 
 model FavoriteExercise {
