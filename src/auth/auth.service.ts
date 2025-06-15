@@ -15,9 +15,9 @@ import { Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import * as nodemailer from 'nodemailer';
 import { firstValueFrom } from 'rxjs';
+import { PrismaService } from '../../prisma/prisma.service';
 import { ActivitiesService } from '../activities/activities.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { PrismaService } from '../prisma.service';
 
 interface GoogleUser {
   email: string;
@@ -184,6 +184,7 @@ export class AuthService {
       throw new Error('Failed to send verification email');
     }
   }
+
   async verifyEmailToken(token: string) {
     const user = await this.prisma.user.findFirst({
       where: { verificationToken: token },
@@ -203,14 +204,25 @@ export class AuthService {
 
     return { message: 'Email verified successfully' };
   }
+
   async login(email: string, password: string, res: Response) {
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user)
+    if (!user) {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid)
+    if (!isPasswordValid) {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    }
+
+    // Перевірка, чи користувач верифікований
+    if (!user.isVerified) {
+      throw new HttpException(
+        'Please verify your email before logging in',
+        HttpStatus.FORBIDDEN,
+      );
+    }
 
     const tokens = this.generateToken(user);
     this.setCookies(res, tokens);
@@ -221,22 +233,12 @@ export class AuthService {
     };
   }
 
-  async forgotPassword(email: string) {}
-
-  async resetPassword(email: string, password: string) {}
-
-  async changePassword(
-    userId: number,
-    oldPassword: string,
-    newPassword: string,
-  ) {}
-
   async googleLogin(req, res: Response): Promise<{ message: string }> {
     if (!req.user) {
       throw new UnauthorizedException('No user from google');
     }
 
-    const { email, firstName, lastName, picture } = req.user;
+    const { email, firstName, lastName, picture } = req.user as GoogleUser;
 
     try {
       let user = await this.prisma.user.findUnique({
