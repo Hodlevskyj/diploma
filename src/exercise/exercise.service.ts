@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
 import { CreateExerciseDto } from '../planexercise/plansexercise.dto';
-import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class ExerciseService {
@@ -89,7 +89,36 @@ export class ExerciseService {
   }
 
   async deleteExercise(id: number) {
-    return this.prisma.exercise.delete({ where: { id } });
+    try {
+      // Перевіряємо, чи існує вправа
+      const exercise = await this.prisma.exercise.findUnique({
+        where: { id },
+      });
+
+      if (!exercise) {
+        throw new NotFoundException(`Вправу з ID ${id} не знайдено`);
+      }
+
+      // Видаляємо всі пов'язані записи в TrackedExercise
+      await this.prisma.trackedExercise.deleteMany({
+        where: { exerciseId: id },
+      });
+
+      // Видаляємо всі пов'язані записи в WorkoutPlanExercise
+      await this.prisma.workoutPlanExercise.deleteMany({
+        where: { exerciseId: id },
+      });
+
+      // Видаляємо вправу
+      return this.prisma.exercise.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error(`Помилка видалення вправи: ${error.message}`);
+    }
   }
 
   async getCategories() {

@@ -19,6 +19,7 @@ import { UpdatePlanDto } from './plansexercise.dto';
 @Controller('dashboard/plans')
 @UseGuards(JwtAuthGuard)
 export class PlansExerciseController {
+  logger: any;
   constructor(private readonly workoutPlanService: PlanExerciseService) {}
 
   @Post()
@@ -170,5 +171,67 @@ export class PlansExerciseController {
   async getPlans(@Request() req) {
     const userId = req.user.userId;
     return this.workoutPlanService.findAll(userId);
+  }
+
+  @Get(':id/exercises')
+  async getPlanExercises(
+    @Param('id', ParseIntPipe) planId: number,
+    @Request() req,
+  ) {
+    const userId = req.user.userId;
+    return this.workoutPlanService.getPlanExercises(planId, userId);
+  }
+
+  @Get('calendar/:month/:year')
+  @UseGuards(JwtAuthGuard)
+  async getCalendar(
+    @Param('month') month: string,
+    @Param('year') year: string,
+    @Request() req,
+  ) {
+    const userId = req.user.userId;
+    const monthNum = parseInt(month, 10);
+    const yearNum = parseInt(year, 10);
+
+    if (
+      isNaN(monthNum) ||
+      monthNum < 1 ||
+      monthNum > 12 ||
+      isNaN(yearNum) ||
+      yearNum < 2000 ||
+      yearNum > 2100
+    ) {
+      return { error: 'Invalid month or year' };
+    }
+
+    const calendar = await this.workoutPlanService.getCalendar(
+      userId,
+      monthNum,
+      yearNum,
+    );
+    return calendar;
+  }
+
+  @Patch('day/:planId/:dayId/complete')
+  @UseGuards(JwtAuthGuard)
+  async markDayAsCompleted(
+    @Param('planId') planId: string,
+    @Param('dayId') dayId: string,
+    @Request() req,
+  ) {
+    const userId = req.user.userId;
+    const planIdNum = parseInt(planId, 10);
+    const dayIdNum = parseInt(dayId, 10);
+
+    if (isNaN(planIdNum) || isNaN(dayIdNum)) {
+      return { error: 'Invalid planId or dayId' };
+    }
+
+    await this.workoutPlanService.markDayAsCompleted(
+      userId,
+      planIdNum,
+      dayIdNum,
+    );
+    return { success: true };
   }
 }

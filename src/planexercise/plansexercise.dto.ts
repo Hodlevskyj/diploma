@@ -19,6 +19,7 @@ export enum ExerciseCategory {
   CARDIO = 'CARDIO',
   FLEXIBILITY = 'FLEXIBILITY',
   BALANCE = 'BALANCE',
+  ARMS = 'ARMS',
 }
 
 export enum DifficultyLevel {

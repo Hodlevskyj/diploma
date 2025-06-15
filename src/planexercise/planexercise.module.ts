@@ -1,6 +1,6 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { PlansExerciseController } from './planexercise.contoller';
 import { PlanExerciseService } from './planexercise.service';
 

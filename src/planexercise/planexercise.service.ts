@@ -3,21 +3,21 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePlanDto } from './dto/createPlan.dto';
-import { GeneratePlanDto } from './dto/generatePlan.dto';
 import { UpdatePlanDto } from './dto/updatePlan.dto';
 
 @Injectable()
 export class PlanExerciseService {
-  constructor(private readonly prisma: PrismaService) {}
+  logger: any;
+  constructor(private prisma: PrismaService) {}
 
-  async create(userId: number, dto: CreatePlanDto) {
-    if (!userId) throw new Error('User ID is required');
+  async create(userId: number, createPlanDto: CreatePlanDto) {
     return this.prisma.workoutPlan.create({
       data: {
-        ...dto,
+        ...createPlanDto,
         userId,
+        status: 'IN_PROGRESS',
       },
     });
   }
@@ -25,22 +25,44 @@ export class PlanExerciseService {
   async findAll(userId: number) {
     return this.prisma.workoutPlan.findMany({
       where: { userId },
+      include: {
+        WorkoutDay: {
+          include: {
+            exercises: {
+              include: {
+                exercise: true,
+              },
+            },
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async findOne(id: number, userId: number) {
     const plan = await this.prisma.workoutPlan.findFirst({
-      where: { id, userId },
+      where: {
+        id,
+        userId,
+      },
       include: {
-        exercises: {
+        WorkoutDay: {
           include: {
-            exercise: true,
+            exercises: {
+              include: {
+                exercise: true,
+              },
+            },
           },
         },
       },
     });
-    if (!plan) throw new NotFoundException('Workout plan not found');
+
+    if (!plan) {
+      throw new NotFoundException(`План з ID ${id} не знайдено`);
+    }
+
     return plan;
   }
 
@@ -104,14 +126,56 @@ export class PlanExerciseService {
     const plan = await this.findOne(planId, userId);
     if (!plan) throw new NotFoundException('Workout plan not found');
 
+    // Знаходимо перший день тренування або створюємо новий, якщо немає днів
+    let workoutDayId: number;
+
+    if (plan.WorkoutDay && plan.WorkoutDay.length > 0) {
+      workoutDayId = plan.WorkoutDay[0].id;
+    } else {
+      // Створюємо новий день тренування
+      const newDay = await this.prisma.workoutDay.create({
+        data: {
+          workoutPlanId: planId,
+          dayNumber: 1,
+          name: 'День 1',
+        },
+      });
+      workoutDayId = newDay.id;
+    }
+
     return this.prisma.workoutPlanExercise.create({
       data: {
-        ...dto,
+        exerciseId: dto.exerciseId,
+        order: dto.order,
+        reps: dto.reps,
+        duration: dto.duration,
+        restDuration: dto.restDuration,
         workoutPlanId: planId,
+        workoutDayId: workoutDayId,
+        isCompleted: false,
       },
     });
   }
+  async getPlanExercises(planId: number, userId: number) {
+    // Перевіряємо, чи існує план і чи належить він користувачу
+    const plan = await this.findOne(planId, userId);
+    if (!plan) throw new NotFoundException('Workout plan not found');
 
+    // Отримуємо всі вправи для цього плану
+    const exercises = await this.prisma.workoutPlanExercise.findMany({
+      where: {
+        workoutPlanId: planId,
+      },
+      include: {
+        exercise: true,
+      },
+      orderBy: {
+        order: 'asc',
+      },
+    });
+
+    return exercises;
+  }
   async removeExerciseFromPlan(
     planId: number,
     exerciseId: number,
@@ -276,300 +340,392 @@ export class PlanExerciseService {
     return { success: true };
   }
 
-  async generatePlan(userId: number, dto: GeneratePlanDto) {
-    // Отримуємо дані користувача
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { height: true, weight: true, goal: true, age: true },
-    });
+  async getCalendar(userId: number, month: number, year: number) {
+    console.log(
+      'Fetching calendar for user:',
+      userId,
+      'month:',
+      month,
+      'year:',
+      year,
+    );
 
-    if (!user) throw new NotFoundException('Користувача не знайдено');
-
-    //індекс тіла
-    const bmi =
-      user.weight && user.height
-        ? user.weight / Math.pow(user.height / 100, 2)
-        : null;
-
-    // Отримуємо всі вправи
-    const allExercises = await this.prisma.exercise.findMany({
-      include: { exerciseCategory: true },
-    });
-
-    // Створюємо план
-    const plan = await this.prisma.workoutPlan.create({
-      data: {
-        userId,
-        name: `Персональний план (${user.goal || dto.fitnessGoal})`,
-        fitnessGoal: user.goal || dto.fitnessGoal,
-        status: 'IN_PROGRESS',
-        WorkoutDay: {
-          create: this.generateWorkoutDays(
-            dto.daysPerWeek,
-            allExercises,
-            user.goal || dto.fitnessGoal,
-            bmi,
-            user.age,
-          ),
-        },
-      },
+    const plans = await this.prisma.workoutPlan.findMany({
+      where: { userId, status: 'IN_PROGRESS' },
       include: {
         WorkoutDay: {
+          where: {
+            scheduledDate: {
+              gte: new Date(year, month - 1, 1),
+              lt: new Date(year, month, 1),
+            },
+          },
           include: { exercises: { include: { exercise: true } } },
         },
       },
     });
 
-    return plan;
+    if (!plans.length) {
+      const daysInMonth = new Date(year, month, 0).getDate();
+      return {
+        month,
+        year,
+        days: Array.from({ length: daysInMonth }, (_, i) => ({
+          day: i + 1,
+          hasWorkouts: false,
+          workouts: [],
+        })),
+      };
+    }
+
+    const calendarDays = [];
+    const daysInMonth = new Date(year, month, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month - 1, day);
+      const dayWorkouts = plans.flatMap((plan) =>
+        plan.WorkoutDay.filter((wd) => {
+          const wdDate = new Date(wd.scheduledDate || date);
+          return (
+            wdDate.getDate() === day &&
+            wdDate.getMonth() === month - 1 &&
+            wdDate.getFullYear() === year
+          );
+        }).map((wd) => ({
+          planId: plan.id,
+          dayId: wd.id,
+          dayName: wd.name || `Day ${wd.dayNumber}`,
+          isCompleted: wd.isCompleted ?? false,
+          exercises: wd.exercises.map((e) => ({
+            id: e.id,
+            name: e.exercise.name,
+            isCompleted: e.isCompleted ?? false,
+          })),
+        })),
+      );
+
+      calendarDays.push({
+        day,
+        hasWorkouts: dayWorkouts.length > 0,
+        workouts: dayWorkouts,
+      });
+    }
+
+    return { month, year, days: calendarDays };
   }
 
-  private generateWorkoutDays(
-    daysPerWeek: number,
-    exercises: any[],
-    goal: string,
-    bmi: number | null,
-    age: number | null,
-  ) {
-    // Групуємо вправи за групами м'язів
-    const exercisesByMuscleGroup = this.groupExercisesByMuscleGroup(exercises);
+  async markDayAsCompleted(userId: number, planId: number, dayId: number) {
+    console.log(
+      'Marking day as completed - user:',
+      userId,
+      'planId:',
+      planId,
+      'dayId:',
+      dayId,
+    );
+    await this.prisma.workoutDay.update({
+      where: { id: dayId, workoutPlanId: planId, workoutPlan: { userId } },
+      data: { isCompleted: true, completedAt: new Date() },
+    });
+  }
 
-    // Визначаємо розподіл днів за типами тренувань
-    const workoutSchedule = this.createWorkoutSchedule(daysPerWeek, goal);
+  async getWorkoutCalendar(userId: number, month: number, year: number) {
+    console.log(
+      'Service: Processing calendar request - userId:',
+      userId,
+      'month:',
+      month,
+      'year:',
+      year,
+    );
 
-    return workoutSchedule.map((dayType, index) => ({
-      dayNumber: index + 1,
-      name: `День ${index + 1}: ${this.getDayName(dayType)}`,
-      exercises: {
-        create: this.selectExercisesForDay(
-          dayType,
-          exercisesByMuscleGroup,
-          goal,
-          bmi,
-          age,
-        ),
+    const plans = await this.prisma.workoutPlan.findMany({
+      where: { userId, status: 'IN_PROGRESS' },
+      include: {
+        WorkoutDay: {
+          where: {
+            scheduledDate: {
+              gte: new Date(year, month - 1, 1),
+              lt: new Date(year, month, 1),
+            },
+          },
+          include: { exercises: { include: { exercise: true } } },
+        },
       },
-    }));
-  }
-
-  private groupExercisesByMuscleGroup(exercises: any[]) {
-    const groups = {
-      cardio: [],
-      chest: [],
-      back: [],
-      legs: [],
-      arms: [],
-      shoulders: [],
-      core: [],
-      fullBody: [],
-    };
-
-    exercises.forEach((exercise) => {
-      const muscleGroup = exercise.muscleGroup.toLowerCase();
-      if (muscleGroup.includes('cardio')) groups.cardio.push(exercise);
-      else if (muscleGroup.includes('chest')) groups.chest.push(exercise);
-      else if (muscleGroup.includes('back')) groups.back.push(exercise);
-      else if (muscleGroup.includes('leg')) groups.legs.push(exercise);
-      else if (
-        muscleGroup.includes('arm') ||
-        muscleGroup.includes('bicep') ||
-        muscleGroup.includes('tricep')
-      )
-        groups.arms.push(exercise);
-      else if (muscleGroup.includes('shoulder'))
-        groups.shoulders.push(exercise);
-      else if (muscleGroup.includes('core') || muscleGroup.includes('abs'))
-        groups.core.push(exercise);
-      else groups.fullBody.push(exercise);
     });
 
-    return groups;
-  }
-
-  private createWorkoutSchedule(daysPerWeek: number, goal: string) {
-    // Розподіл типів тренувань залежно від цілі
-    if (goal === 'LOSE_WEIGHT') {
-      // Для схуднення: більше кардіо та повного тіла
-      return Array(daysPerWeek)
-        .fill(0)
-        .map((_, i) => {
-          if (i % 3 === 0) return 'cardio';
-          if (i % 3 === 1) return 'fullBody';
-          return ['legs', 'upper', 'core'][Math.floor(Math.random() * 3)];
-        });
-    } else if (goal === 'GAIN_MUSCLE') {
-      // Для набору м'язової маси: розподіл за групами м'язів
-      const schedule = [
-        'chest',
-        'back',
-        'legs',
-        'shoulders',
-        'arms',
-        'rest',
-        'rest',
-      ];
-      return Array(daysPerWeek)
-        .fill(0)
-        .map((_, i) => schedule[i % 7]);
-    } else {
-      // Для підтримки форми: змішаний підхід
-      const schedule = [
-        'cardio',
-        'upper',
-        'lower',
-        'fullBody',
-        'core',
-        'rest',
-        'rest',
-      ];
-      return Array(daysPerWeek)
-        .fill(0)
-        .map((_, i) => schedule[i % 7]);
+    if (!plans.length) {
+      const daysInMonth = new Date(year, month, 0).getDate();
+      return {
+        month,
+        year,
+        days: Array.from({ length: daysInMonth }, (_, i) => ({
+          day: i + 1,
+          hasWorkouts: false,
+          workouts: [],
+        })),
+      };
     }
+
+    const calendarDays = [];
+    const daysInMonth = new Date(year, month, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month - 1, day);
+      const dayWorkouts = plans.flatMap((plan) =>
+        plan.WorkoutDay.filter((wd) => {
+          const wdDate = new Date(wd.scheduledDate || date);
+          return (
+            wdDate.getDate() === day &&
+            wdDate.getMonth() === month - 1 &&
+            wdDate.getFullYear() === year
+          );
+        }).map((wd) => ({
+          planId: plan.id,
+          planName: plan.name,
+          dayId: wd.id,
+          dayName: wd.name || `Day ${wd.dayNumber}`,
+          isCompleted: wd.isCompleted ?? false,
+          completedAt: wd.completedAt,
+          exercisesCount: wd.exercises.length,
+          completedExercisesCount: wd.exercises.filter(
+            (e) => e.isCompleted ?? false,
+          ).length,
+        })),
+      );
+
+      calendarDays.push({
+        day,
+        hasWorkouts: dayWorkouts.length > 0,
+        workouts: dayWorkouts,
+      });
+    }
+
+    return { month, year, days: calendarDays };
   }
 
-  private getDayName(dayType: string): string {
-    const names = {
-      cardio: 'Кардіо',
-      chest: 'Груди',
-      back: 'Спина',
-      legs: 'Ноги',
-      arms: 'Руки',
-      shoulders: 'Плечі',
-      core: 'Прес',
-      fullBody: 'Все тіло',
-      upper: 'Верхня частина',
-      lower: 'Нижня частина',
-      rest: 'Відпочинок',
-    };
-    return names[dayType] || dayType;
-  }
-
-  private selectExercisesForDay(
-    dayType: string,
-    exercisesByGroup: any,
-    goal: string,
-    bmi: number | null,
-    age: number | null,
+  async markExerciseAsCompleted(
+    planId: number,
+    exerciseId: number,
+    userId: number,
   ) {
-    // Визначаємо інтенсивність на основі BMI та віку
-    const intensity = this.determineIntensity(bmi, age);
+    const plan = await this.prisma.workoutPlan.findUnique({
+      where: { id: planId, userId },
+      include: { WorkoutDay: { include: { exercises: true } } },
+    });
+    if (!plan) throw new NotFoundException('Plan not found');
+    const exercise = plan.WorkoutDay.flatMap((d) => d.exercises).find(
+      (e) => e.id === exerciseId,
+    );
+    if (!exercise) throw new NotFoundException('Exercise not found');
+    return this.prisma.workoutPlanExercise.update({
+      where: { id: exerciseId },
+      data: { isCompleted: true, completedAt: new Date() },
+    });
+  }
+  private calculateDayDate(startDate: Date, dayNumber: number): Date {
+    const date = new Date(startDate);
 
-    // Кількість вправ залежно від типу дня та інтенсивності
-    const exerciseCount =
-      dayType === 'rest'
-        ? 0
-        : dayType === 'cardio'
-          ? 3
-          : intensity === 'high'
-            ? 6
-            : intensity === 'medium'
-              ? 5
-              : 4;
+    // Додаємо (dayNumber - 1) днів до початкової дати
+    // Віднімаємо 1, бо перший день (dayNumber = 1) має бути в день startDate
+    date.setDate(date.getDate() + (dayNumber - 1));
 
-    if (dayType === 'rest') return [];
+    return date;
+  }
 
-    let selectedExercises = [];
+  async generatePlan(
+    userId: number,
+    dto: { daysPerWeek: number; fitnessGoal: string; startDate?: Date },
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
 
-    // Вибираємо вправи залежно від типу дня
-    if (dayType === 'cardio') {
-      selectedExercises = this.getRandomExercises(
-        exercisesByGroup.cardio,
-        exerciseCount,
+    const plan = await this.prisma.workoutPlan.create({
+      data: {
+        userId,
+        name: `Plan for ${user.goal || dto.fitnessGoal}`,
+        fitnessGoal: user.goal || dto.fitnessGoal,
+        startDate: dto.startDate || new Date(),
+        status: 'IN_PROGRESS',
+      },
+    });
+
+    // Отримуємо вправи з включеним exerciseCategory
+    const exercises = await this.prisma.exercise.findMany({
+      include: { exerciseCategory: true },
+    });
+    console.log('Total exercises fetched:', exercises.length);
+
+    // Фільтрація вправ залежно від цілі
+    let targetExercises = exercises.filter((e) => {
+      const category = e.exerciseCategory?.name || '';
+      const muscleGroup = e.muscleGroup?.toLowerCase() || '';
+
+      return (
+        (dto.fitnessGoal === 'LOSE_WEIGHT' &&
+          (category === 'Cardio' ||
+            ['ноги', 'грудь', 'спина'].some((mg) =>
+              muscleGroup.includes(mg.toLowerCase()),
+            ))) ||
+        (dto.fitnessGoal === 'GAIN_MUSCLE' &&
+          ['грудь', 'спина', 'ноги', 'плечі', 'руки'].some((mg) =>
+            muscleGroup.includes(mg.toLowerCase()),
+          )) ||
+        (dto.fitnessGoal === 'STAY_ACTIVE' &&
+          (category === 'Flexibility' ||
+            ['ноги', 'корисний суглоб', 'руки'].some((mg) =>
+              muscleGroup.includes(mg.toLowerCase()),
+            )))
       );
-    } else if (dayType === 'fullBody') {
-      selectedExercises = [
-        ...this.getRandomExercises(exercisesByGroup.chest, 1),
-        ...this.getRandomExercises(exercisesByGroup.back, 1),
-        ...this.getRandomExercises(exercisesByGroup.legs, 1),
-        ...this.getRandomExercises(exercisesByGroup.core, 1),
-      ];
-    } else if (dayType === 'upper') {
-      selectedExercises = [
-        ...this.getRandomExercises(exercisesByGroup.chest, 2),
-        ...this.getRandomExercises(exercisesByGroup.back, 2),
-        ...this.getRandomExercises(exercisesByGroup.arms, 1),
-      ];
-    } else if (dayType === 'lower') {
-      selectedExercises = [
-        ...this.getRandomExercises(exercisesByGroup.legs, 4),
-        ...this.getRandomExercises(exercisesByGroup.core, 1),
-      ];
-    } else {
-      // Для конкретної групи м'язів
-      selectedExercises = this.getRandomExercises(
-        exercisesByGroup[dayType] || [],
-        exerciseCount,
-      );
+    });
+    console.log('Filtered exercises for goal:', targetExercises.length);
+
+    if (targetExercises.length === 0) {
+      throw new Error('No exercises found for the specified fitness goal.');
     }
 
-    // Налаштовуємо параметри вправ залежно від цілі та інтенсивності
-    return selectedExercises.map((exercise, index) =>
-      this.configureExerciseParams(exercise, index, goal, intensity),
-    );
-  }
+    const intensity = 1.0; // Базова інтенсивність
+    const exercisesPerDay = 3; // Кількість вправ на день
 
-  private getRandomExercises(exercises: any[], count: number) {
-    if (!exercises || exercises.length === 0) return [];
+    // Генерація днів тренувань з випадковим вибором вправ
+    const workoutDays = Array.from({ length: dto.daysPerWeek }, (_, i) => {
+      const dayNumber = i + 1;
+      const dayName = `Day ${dayNumber}`;
+      const scheduledDate = this.calculateDayDate(
+        dto.startDate || new Date(),
+        dayNumber,
+      );
 
-    // Перемішуємо масив вправ
-    const shuffled = [...exercises].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, Math.min(count, shuffled.length));
-  }
+      // Випадковий вибір вправ для дня
+      const dayExercises = this.getRandomExercises(
+        targetExercises,
+        exercisesPerDay,
+      );
 
-  private determineIntensity(
-    bmi: number | null,
-    age: number | null,
-  ): 'low' | 'medium' | 'high' {
-    if (!bmi || !age) return 'medium';
+      return {
+        dayNumber,
+        name: dayName,
+        scheduledDate,
+        exercises: {
+          createMany: {
+            data: dayExercises.map((e, idx) =>
+              this.configureExerciseParams(e, idx, dto.fitnessGoal, intensity),
+            ),
+          },
+        },
+      };
+    });
 
-    // Визначаємо інтенсивність на основі BMI та віку
-    if (age > 50) return 'low';
-    if (age > 30 && bmi > 30) return 'low';
-    if (age > 30 && bmi < 20) return 'low';
-    if (bmi > 35) return 'low';
-    if (bmi > 30 || bmi < 18.5) return 'medium';
-    return 'high';
+    for (const day of workoutDays) {
+      const createdDay = await this.prisma.workoutDay.create({
+        data: {
+          workoutPlanId: plan.id,
+          dayNumber: day.dayNumber,
+          name: day.name,
+          scheduledDate: day.scheduledDate,
+        },
+      });
+      await this.prisma.workoutPlanExercise.createMany({
+        data: day.exercises.createMany.data.map((ex) => ({
+          ...ex,
+          workoutPlanId: plan.id,
+          workoutDayId: createdDay.id,
+        })),
+      });
+    }
+
+    return this.prisma.workoutPlan.findUnique({
+      where: { id: plan.id },
+      include: {
+        WorkoutDay: { include: { exercises: { include: { exercise: true } } } },
+      },
+    });
   }
 
   private configureExerciseParams(
     exercise: any,
-    order: number,
+    index: number,
     goal: string,
-    intensity: string,
+    intensity: number,
   ) {
+    if (!exercise || !exercise.id) {
+      console.error('Invalid exercise object:', exercise);
+      throw new Error('Invalid exercise data');
+    }
+
     // Базові параметри
-    const params: any = {
+    const result = {
       exerciseId: exercise.id,
-      order: order,
+      order: index + 1,
+      reps: null,
+      duration: null,
+      restDuration: null,
     };
 
     // Налаштовуємо параметри залежно від типу вправи
-    const isCardio = exercise.muscleGroup.toLowerCase().includes('cardio');
-
-    if (isCardio) {
-      // Для кардіо вправ
-      params.duration =
-        intensity === 'high' ? 600 : intensity === 'medium' ? 480 : 300; // в секундах
-      params.restDuration =
-        intensity === 'high' ? 60 : intensity === 'medium' ? 90 : 120;
+    if (exercise.exerciseCategory?.name === 'Cardio') {
+      // Для кардіо встановлюємо тривалість
+      result.duration =
+        goal === 'LOSE_WEIGHT'
+          ? Math.round(intensity * 60) // Більше для схуднення
+          : Math.round(intensity * 30); // Менше для інших цілей
     } else {
-      // Для силових вправ
-      if (goal === 'LOSE_WEIGHT') {
-        params.reps =
-          intensity === 'high' ? 15 : intensity === 'medium' ? 12 : 10;
-        params.restDuration =
-          intensity === 'high' ? 30 : intensity === 'medium' ? 45 : 60;
-      } else if (goal === 'GAIN_MUSCLE') {
-        params.reps =
-          intensity === 'high' ? 10 : intensity === 'medium' ? 8 : 6;
-        params.restDuration =
-          intensity === 'high' ? 90 : intensity === 'medium' ? 120 : 150;
-      } else {
-        params.reps = 12;
-        params.restDuration = 60;
-      }
+      // Для силових вправ встановлюємо повторення
+      result.reps = this.calculateReps(intensity, exercise.muscleGroup);
     }
 
-    return params;
+    // Встановлюємо час відпочинку
+    result.restDuration = this.calculateRestDuration(intensity, goal);
+
+    return result;
+  }
+
+  private calculateReps(intensity: number, muscleGroup: string): number {
+    // Базова кількість повторень
+    let baseReps = 10;
+
+    // Модифікуємо залежно від групи м'язів
+    if (['chest', 'back', 'legs'].includes(muscleGroup)) {
+      baseReps = 8; // Менше повторень для великих груп м'язів
+    } else if (['arms', 'shoulders'].includes(muscleGroup)) {
+      baseReps = 12; // Більше повторень для малих груп м'язів
+    } else if (muscleGroup === 'core') {
+      baseReps = 15; // Найбільше для кору
+    }
+
+    // Модифікуємо залежно від інтенсивності
+    return Math.round(baseReps * intensity);
+  }
+
+  private calculateRestDuration(intensity: number, goal: string): number {
+    // Базовий час відпочинку в секундах
+    let baseRest = 60;
+
+    // Модифікуємо залежно від цілі
+    if (goal === 'LOSE_WEIGHT') {
+      baseRest = 45; // Менше відпочинку для схуднення
+    } else if (goal === 'GAIN_MUSCLE') {
+      baseRest = 90; // Більше відпочинку для набору маси
+    }
+
+    // Модифікуємо залежно від інтенсивності
+    return Math.round(baseRest * intensity);
+  }
+
+  private getRandomExercises(exercises: any[], count: number): any[] {
+    if (!exercises || exercises.length === 0) {
+      console.warn('Немає доступних вправ для вибору');
+      return [];
+    }
+
+    // Якщо вправ менше, ніж потрібно, повертаємо всі доступні
+    if (exercises.length <= count) {
+      console.log(`Доступно лише ${exercises.length} вправ, повертаємо всі`);
+      return [...exercises];
+    }
+
+    // Перемішуємо масив вправ
+    const shuffled = [...exercises].sort(() => 0.5 - Math.random());
+
+    // Повертаємо потрібну кількість вправ
+    return shuffled.slice(0, count);
   }
 }

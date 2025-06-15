@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class UserService {
@@ -57,9 +57,8 @@ export class UserService {
         throw new Error('Cannot delete admin user');
       }
 
-      // Delete all related data in a transaction
+      // видалення всіх пов'язаних даних
       await this.prisma.$transaction(async (tx) => {
-        // Delete favorites first (no dependencies)
         await tx.favoriteExercise.deleteMany({
           where: { userId: id },
         });
@@ -108,13 +107,6 @@ export class UserService {
           });
           console.log(
             `Deleted ${await tx.workoutPlanExercise.count({ where: { workoutPlanId: plan.id } })} plan exercises`,
-          );
-
-          await tx.workoutPlanSchedule.deleteMany({
-            where: { workoutPlanId: plan.id },
-          });
-          console.log(
-            `Deleted ${await tx.workoutPlanSchedule.count({ where: { workoutPlanId: plan.id } })} schedules`,
           );
         }
 
