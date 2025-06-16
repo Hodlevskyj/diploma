@@ -141,62 +141,6 @@ export default function GeneratePlanPage() {
 								)}
 							/>
 
-							<FormField
-								control={form.control}
-								name='difficultyLevel'
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Рівень складності</FormLabel>
-										<Select
-											onValueChange={field.onChange}
-											defaultValue={field.value}
-										>
-											<FormControl>
-												<SelectTrigger>
-													<SelectValue placeholder='Виберіть рівень складності' />
-												</SelectTrigger>
-											</FormControl>
-											<SelectContent>
-												<SelectItem value='BEGINNER'>Початківець</SelectItem>
-												<SelectItem value='INTERMEDIATE'>Середній</SelectItem>
-												<SelectItem value='ADVANCED'>Просунутий</SelectItem>
-											</SelectContent>
-										</Select>
-									</FormItem>
-								)}
-							/>
-
-							<FormField
-								control={form.control}
-								name='equipmentType'
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Доступне обладнання</FormLabel>
-										<Select
-											onValueChange={field.onChange}
-											defaultValue={field.value}
-										>
-											<FormControl>
-												<SelectTrigger>
-													<SelectValue placeholder='Виберіть тип обладнання' />
-												</SelectTrigger>
-											</FormControl>
-											<SelectContent>
-												<SelectItem value='NONE'>Без обладнання</SelectItem>
-												<SelectItem value='MINIMAL'>
-													Мінімальне обладнання
-												</SelectItem>
-												<SelectItem value='HOME_GYM'>
-													Домашній спортзал
-												</SelectItem>
-												<SelectItem value='FULL_GYM'>
-													Повноцінний спортзал
-												</SelectItem>
-											</SelectContent>
-										</Select>
-									</FormItem>
-								)}
-							/>
 							<Button type='submit' className='w-full' disabled={isLoading}>
 								{isLoading ? (
 									<>
