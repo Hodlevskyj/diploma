@@ -32,7 +32,6 @@ export interface User {
 	weight?: number
 	age?: number
 	goal?: GoalType
-	isSetupComplete: boolean
 	createdAt: string
 	updatedAt: string
 }
