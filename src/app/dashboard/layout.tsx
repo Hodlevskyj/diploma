@@ -29,7 +29,7 @@ export default function DashboardLayout({
 							<BreadcrumbList>
 								<BreadcrumbItem>
 									<BreadcrumbPage className='line-clamp-1'>
-										Dashboard
+										Панель керування
 									</BreadcrumbPage>
 								</BreadcrumbItem>
 							</BreadcrumbList>

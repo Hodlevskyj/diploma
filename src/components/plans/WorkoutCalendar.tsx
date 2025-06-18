@@ -363,7 +363,7 @@ export function WorkoutCalendar({ userId }: { userId?: number }) {
 							{selectedDay &&
 								`${selectedDay.day} ${format(date, 'LLLL yyyy', {
 									locale: uk,
-								})}`}
+								})} `}
 						</DialogTitle>
 					</DialogHeader>
 

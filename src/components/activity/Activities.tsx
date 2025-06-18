@@ -1,12 +1,6 @@
 'use client'
 
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
 	Activity,
@@ -294,22 +288,6 @@ export default function Activities() {
 
 	return (
 		<div className='min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50'>
-			{/* Header */}
-			<div className='bg-white/80 backdrop-blur-sm border-b sticky top-0 z-10'>
-				<div className='max-w-7xl mx-auto px-4 py-6'>
-					<div className='flex justify-between items-center'>
-						<div className='flex items-center space-x-3'>
-							<div className='p-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg'></div>
-							<div>
-								<h1 className='text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent'>
-									Strava Dashboard
-								</h1>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
 			<div className='max-w-7xl mx-auto px-4 py-8'>
 				{/* Stats Overview */}
 				{stats && (
@@ -317,7 +295,7 @@ export default function Activities() {
 						<Card className='bg-gradient-to-br from-orange-500 to-red-500 text-white border-0'>
 							<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
 								<CardTitle className='text-sm font-medium opacity-90'>
-									Total Distance
+									Сумарна дистанція
 								</CardTitle>
 								<MapPin className='h-4 w-4 opacity-90' />
 							</CardHeader>
@@ -331,14 +309,14 @@ export default function Activities() {
 						<Card className='bg-gradient-to-br from-blue-500 to-cyan-500 text-white border-0'>
 							<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
 								<CardTitle className='text-sm font-medium opacity-90'>
-									Total Time
+									Всього часу
 								</CardTitle>
 								<Clock className='h-4 w-4 opacity-90' />
 							</CardHeader>
 							<CardContent>
 								<div className='text-2xl font-bold'>{stats.totalDuration}</div>
 								<p className='text-xs opacity-90'>
-									{stats.activityCount} activities completed
+									{stats.activityCount} завершенні активності
 								</p>
 							</CardContent>
 						</Card>
@@ -346,7 +324,7 @@ export default function Activities() {
 						<Card className='bg-gradient-to-br from-green-500 to-emerald-500 text-white border-0'>
 							<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
 								<CardTitle className='text-sm font-medium opacity-90'>
-									Calories Burned
+									Спалені калорії
 								</CardTitle>
 								<Zap className='h-4 w-4 opacity-90' />
 							</CardHeader>
@@ -361,7 +339,7 @@ export default function Activities() {
 												(stats.totalCalories || 0) / stats.activityCount
 										  )
 										: 0}{' '}
-									per activity
+									на активність
 								</p>
 							</CardContent>
 						</Card>
@@ -370,9 +348,9 @@ export default function Activities() {
 
 				<Tabs defaultValue='progress' className='mb-8'>
 					<TabsList className='grid w-full grid-cols-3'>
-						<TabsTrigger value='progress'>Progress</TabsTrigger>
-						<TabsTrigger value='breakdown'>Activity Breakdown</TabsTrigger>
-						<TabsTrigger value='distance'>Distance Analysis</TabsTrigger>
+						<TabsTrigger value='progress'>Прогрес</TabsTrigger>
+						<TabsTrigger value='breakdown'>Розподіл діяльності</TabsTrigger>
+						<TabsTrigger value='distance'>Аналіз відстані</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value='breakdown' className='mt-6'>
@@ -380,11 +358,8 @@ export default function Activities() {
 							<CardHeader>
 								<CardTitle className='flex items-center gap-2'>
 									<Award className='h-5 w-5' />
-									Activity Type Distribution
+									Тип діяльності
 								</CardTitle>
-								<CardDescription>
-									Breakdown of your activities by type
-								</CardDescription>
 							</CardHeader>
 							<CardContent>
 								{pieData.length > 0 && (
@@ -424,11 +399,8 @@ export default function Activities() {
 							<CardHeader>
 								<CardTitle className='flex items-center gap-2'>
 									<MapPin className='h-5 w-5' />
-									Distance by Activity Type
+									Відстань за типом діяльності
 								</CardTitle>
-								<CardDescription>
-									Total distance covered by each activity type
-								</CardDescription>
 							</CardHeader>
 							<CardContent>
 								{barData.length > 0 && (
@@ -451,9 +423,8 @@ export default function Activities() {
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>
 							<Activity className='h-5 w-5' />
-							Recent Activities
+							Нежодавня активність
 						</CardTitle>
-						<CardDescription>Your latest fitness achievements</CardDescription>
 					</CardHeader>
 					<CardContent>
 						{activities.length > 0 ? (

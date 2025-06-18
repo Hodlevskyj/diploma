@@ -2,7 +2,6 @@
 
 import GoogleLoginButton from '@/components/button/GoogleLoginButton'
 import StravaLoginButton from '@/components/button/StravaLoginButton'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
 	Card,
@@ -12,14 +11,7 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import {
-	Activity,
-	ArrowRight,
-	Loader2,
-	Target,
-	TrendingUp,
-	Zap,
-} from 'lucide-react'
+import { Activity, ArrowRight, Loader2, Target, TrendingUp } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -102,11 +94,6 @@ export default function Home() {
 				<div className='relative'>
 					<div className='container mx-auto px-4 py-24 lg:py-32'>
 						<div className='max-w-4xl mx-auto text-center space-y-8'>
-							<Badge variant='secondary' className='mb-4'>
-								<Zap className='w-3 h-3 mr-1' />
-								Нова версія доступна
-							</Badge>
-
 							<h1 className='text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter'>
 								<span className='bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent'>
 									Fitness Tracker
@@ -210,14 +197,14 @@ export default function Home() {
 										<Button
 											variant='outline'
 											size='lg'
-											onClick={() => router.push('/auth/login')}
+											onClick={() => router.push('/login')}
 											className='min-w-[140px]'
 										>
 											Увійти
 										</Button>
 										<Button
 											size='lg'
-											onClick={() => router.push('/auth/register')}
+											onClick={() => router.push('/register')}
 											className='min-w-[140px]'
 										>
 											Зареєструватися
@@ -262,7 +249,7 @@ export default function Home() {
 							<Card className='group hover:shadow-lg transition-all duration-300 border-0 bg-background/60 backdrop-blur-sm'>
 								<CardHeader className='text-center space-y-4'>
 									<div className='flex items-center justify-center w-16 h-16 rounded-full bg-secondary/10 mx-auto group-hover:bg-secondary/20 transition-colors'>
-										<Target className='w-8 h-8 text-secondary' />
+										<Target className='w-8 h-8 text-secondary ' />
 									</div>
 									<CardTitle className='text-xl'>Розумні Цілі</CardTitle>
 								</CardHeader>
