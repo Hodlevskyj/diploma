@@ -20,18 +20,12 @@ model User {
   password           String
   role               Role                    @default(USER)
   isVerified         Boolean                 @default(false)
-  verificationCode   String?
   picture            String?
-  height             Int?
-  weight             Int?
-  age                Int?
   goal               GoalType?
   stravaId           Int?                    @unique
   stravaAccessToken  String?
   stravaRefreshToken String?
   stravaTokenExpires DateTime?
-  isSetupComplete    Boolean                 @default(false)
-  verificationToken  String?                 @unique
   createdAt          DateTime                @default(now())
   updatedAt          DateTime                @updatedAt
   Activity           Activity[]
@@ -39,7 +33,6 @@ model User {
   WorkoutCompletion  WorkoutPlanCompletion[]
   TrackedExercise    TrackedExercise[]
   Exercise           Exercise[]
-  FavoriteExercise   FavoriteExercise[]
   FavoritePlan       FavoritePlan[]
 }
 
@@ -190,7 +183,6 @@ model Exercise {
   TrackedExercise    TrackedExercise[]
   userId             Int
   user               User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  FavoriteExercise   FavoriteExercise[]
 
   @@index([userId])
   @@index([exerciseCategoryId])
@@ -205,17 +197,6 @@ model WorkoutPlanCompletion {
   completedAt   DateTime    @default(now())
   Exercise      Exercise?   @relation(fields: [exerciseId], references: [id])
   exerciseId    Int?
-}
-
-model FavoriteExercise {
-  id         Int      @id @default(autoincrement())
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId     Int
-  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
-  exerciseId Int
-  createdAt  DateTime @default(now())
-
-  @@unique([userId, exerciseId])
 }
 
 model FavoritePlan {

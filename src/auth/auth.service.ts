@@ -229,7 +229,6 @@ export class AuthService {
 
     return {
       message: 'Login successful',
-      isSetupComplete: user.isSetupComplete,
     };
   }
 
@@ -328,7 +327,6 @@ export class AuthService {
         weight: Number(data.weight),
         age: Number(data.age),
         goal: data.goal ? (data.goal.toUpperCase() as GoalType) : undefined,
-        isSetupComplete: true,
       },
     });
   }
@@ -344,7 +342,6 @@ export class AuthService {
         weight: Number(data.weight),
         age: Number(data.age),
         goal: data.goal.toUpperCase() as GoalType,
-        isSetupComplete: true,
       },
     });
   }
