@@ -1,15 +1,15 @@
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+// import { useRouter } from 'next/navigation'
+// import { useEffect } from 'react'
 
-const useAuthRedirect = () => {
-	const router = useRouter()
+// const useAuthRedirect = () => {
+// 	const router = useRouter()
 
-	useEffect(() => {
-		const token = localStorage.getItem('token')
-		if (token) {
-			router.push('/dashboard')
-		}
-	}, [router])
-}
+// 	useEffect(() => {
+// 		const token = localStorage.getItem('token')
+// 		if (token) {
+// 			router.push('/dashboard')
+// 		}
+// 	}, [router])
+// }
 
-export default useAuthRedirect
+// export default useAuthRedirect

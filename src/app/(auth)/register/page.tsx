@@ -7,9 +7,6 @@ const RegisterPage = () => {
 			<div className='register-page'>
 				<RegisterForm />
 			</div>
-			<p>
-				Have an account? <a href='/login'>Login</a>
-			</p>
 		</>
 	)
 }

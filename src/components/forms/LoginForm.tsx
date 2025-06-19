@@ -50,10 +50,8 @@ export default function LoginForm({
 			const data = await response.json()
 
 			if (!response.ok) {
-				if (data.message === 'Email not verified') {
-					setError(
-						'Please verify your email first. Check your inbox for the verification link.'
-					)
+				if (data.message === 'Пошта не перевірена') {
+					setError('Будь ласка перевірте власну пошту.')
 				} else {
 					throw new Error(data.message)
 				}
@@ -72,9 +70,9 @@ export default function LoginForm({
 		<div>
 			<Card className='w-full max-w-md'>
 				<CardHeader className='text-center'>
-					<CardTitle className='text-2xl'>Welcome back</CardTitle>
+					<CardTitle className='text-2xl'>З поверненням</CardTitle>
 					<CardDescription>
-						Login with your Google or Strava account
+						Увійти використовуючи Google або Strava
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -89,14 +87,12 @@ export default function LoginForm({
 							<StravaLoginButton />
 						</div>
 						<div className='relative text-center text-sm my-2'>
-							<span className='bg-card px-2 relative z-10'>
-								Or continue with
-							</span>
+							<span className='bg-card px-2 relative z-10'>Або продовжи з</span>
 							<div className='absolute left-0 right-0 top-1/2 border-t border-border -z-0'></div>
 						</div>
 						<div className='grid gap-4'>
 							<div className='grid gap-2'>
-								<Label htmlFor='email'>Email</Label>
+								<Label htmlFor='email'>Пошта</Label>
 								<Input
 									id='email'
 									type='email'
@@ -111,7 +107,7 @@ export default function LoginForm({
 							</div>
 							<div className='grid gap-2'>
 								<div className='flex items-center'>
-									<Label htmlFor='password'>Password</Label>
+									<Label htmlFor='password'>Пароль</Label>
 								</div>
 								<Input
 									id='password'
@@ -125,16 +121,16 @@ export default function LoginForm({
 								/>
 							</div>
 							<Button type='submit' className='w-full' disabled={loading}>
-								{loading ? 'Signing in...' : 'Sign in'}
+								{loading ? 'Входження...' : 'Вхід'}
 							</Button>
 						</div>
 						<div className='text-center text-sm'>
-							Don't have an account?{' '}
+							Не маєте акаунту?{' '}
 							<Link
 								href='/register'
 								className='underline underline-offset-4 text-indigo-600 hover:text-indigo-500'
 							>
-								Sign up
+								Реєстрація
 							</Link>
 						</div>
 					</form>

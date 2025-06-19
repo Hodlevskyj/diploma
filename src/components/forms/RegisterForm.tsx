@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import useAuthRedirect from '@/hooks/useAuthRedirect'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -23,7 +22,7 @@ export default function RegisterForm({
 	...props
 }: React.ComponentProps<'div'>) {
 	const router = useRouter()
-	useAuthRedirect()
+	// useAuthRedirect()
 	const [formData, setFormData] = useState({
 		name: '',
 		email: '',
@@ -70,20 +69,22 @@ export default function RegisterForm({
 			>
 				<Card className='w-full max-w-md'>
 					<CardHeader className='text-center'>
-						<CardTitle className='text-2xl'>Check your email</CardTitle>
+						<CardTitle className='text-2xl'>Перевірте вашу пошту</CardTitle>
 						<CardDescription>
-							We've sent a verification link to {formData.email}.<br />
-							Please check your inbox and click the link to verify your account.
+							Ми надіслали лист для перевірки вашої пошти {formData.email}.
+							<br />
+							Будь ласка, перевірте свою поштову скриньку та натисніть
+							посилання, щоб підтвердити свій обліковий запис.
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div className='text-center text-sm text-gray-500'>
-							Didn't receive the email?{' '}
+							Не отримав підтвердження?{' '}
 							<button
 								onClick={() => setVerificationSent(false)}
 								className='text-indigo-600 hover:text-indigo-500 underline'
 							>
-								Try again
+								Спробувати знову
 							</button>
 						</div>
 					</CardContent>
@@ -102,7 +103,7 @@ export default function RegisterForm({
 		>
 			<Card className='w-full max-w-md'>
 				<CardHeader className='text-center'>
-					<CardTitle className='text-2xl'>Create your account</CardTitle>
+					<CardTitle className='text-2xl'>Створити акаунт</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<form className='grid gap-6' onSubmit={handleSubmit}>
@@ -116,18 +117,16 @@ export default function RegisterForm({
 							<StravaLoginButton />
 						</div>
 						<div className='relative text-center text-sm my-2'>
-							<span className='bg-card px-2 relative z-10'>
-								Or continue with
-							</span>
+							<span className='bg-card px-2 relative z-10'>Або продовжи з</span>
 							<div className='absolute left-0 right-0 top-1/2 border-t border-border -z-0'></div>
 						</div>
 						<div className='grid gap-4'>
 							<div className='grid gap-2'>
-								<Label htmlFor='name'>Full name</Label>
+								<Label htmlFor='name'>Ім'я</Label>
 								<Input
 									id='name'
 									type='text'
-									placeholder='Your name'
+									placeholder='Ваше ім&#39;я'
 									required
 									value={formData.name}
 									onChange={e =>
@@ -137,7 +136,7 @@ export default function RegisterForm({
 								/>
 							</div>
 							<div className='grid gap-2'>
-								<Label htmlFor='email'>Email</Label>
+								<Label htmlFor='email'>Пошта</Label>
 								<Input
 									id='email'
 									type='email'
@@ -151,11 +150,11 @@ export default function RegisterForm({
 								/>
 							</div>
 							<div className='grid gap-2'>
-								<Label htmlFor='password'>Password</Label>
+								<Label htmlFor='password'>Пароль</Label>
 								<Input
 									id='password'
 									type='password'
-									placeholder='Password'
+									placeholder='Пароль'
 									required
 									value={formData.password}
 									onChange={e =>
@@ -165,16 +164,16 @@ export default function RegisterForm({
 								/>
 							</div>
 							<Button type='submit' className='w-full' disabled={loading}>
-								{loading ? 'Creating account...' : 'Create account'}
+								{loading ? 'Створення акаунту...' : 'Створити акаунт'}
 							</Button>
 						</div>
 						<div className='text-center text-sm'>
-							Already have an account?{' '}
+							Вже маєте акаунт?{' '}
 							<Link
 								href='/login'
 								className='underline underline-offset-4 text-indigo-600 hover:text-indigo-500'
 							>
-								Sign in
+								Увійти
 							</Link>
 						</div>
 					</form>

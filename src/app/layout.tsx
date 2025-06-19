@@ -30,12 +30,11 @@ export default function RootLayout({
 		pathname === '/register' ||
 		pathname.startsWith('/dashboard') ||
 		pathname.startsWith('/admin')
-
 	return (
 		<html lang='en'>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-				suppressHydrationWarning
+				suppressHydrationWarning={true}
 			>
 				<AuthProvider>
 					<QueryClientProvider client={queryClient}>

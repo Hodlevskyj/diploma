@@ -1,9 +1,9 @@
 import {
 	AddExerciseDto,
 	CreatePlanDto,
-	Plan,
 	UpdatePlanDto,
-} from '@/types/plan'
+	WorkoutPlan,
+} from '@/types/planexercise'
 
 const getTokenFromCookies = () => {
 	const cookies = document.cookie
@@ -30,7 +30,7 @@ const handleResponse = async (response: Response) => {
 }
 
 export const planService = {
-	async getAll(): Promise<Plan[]> {
+	async getAll(): Promise<WorkoutPlan[]> {
 		try {
 			const response = await fetch(
 				`${process.env.NEXT_PUBLIC_API_BASE_URL}/plans`,
@@ -54,7 +54,7 @@ export const planService = {
 		}
 	},
 
-	async create(data: CreatePlanDto): Promise<Plan> {
+	async create(data: CreatePlanDto): Promise<WorkoutPlan> {
 		try {
 			console.log('Створення плану з даними:', data)
 
@@ -114,7 +114,7 @@ export const planService = {
 		}
 	},
 
-	async fetchPlan(id: string): Promise<Plan> {
+	async fetchPlan(id: string): Promise<WorkoutPlan> {
 		try {
 			const response = await fetch(
 				`${process.env.NEXT_PUBLIC_API_BASE_URL}/plans/${id}`,
@@ -150,7 +150,7 @@ export const planService = {
 		}
 	},
 
-	async updatePlan(id: string, data: UpdatePlanDto): Promise<Plan> {
+	async updatePlan(id: string, data: UpdatePlanDto): Promise<WorkoutPlan> {
 		const response = await fetch(
 			`${process.env.NEXT_PUBLIC_API_BASE_URL}/plans/${id}`,
 			{
@@ -164,7 +164,10 @@ export const planService = {
 		return response.json()
 	},
 
-	async addExercise(planId: string, data: AddExerciseDto): Promise<Plan> {
+	async addExercise(
+		planId: string,
+		data: AddExerciseDto
+	): Promise<WorkoutPlan> {
 		const response = await fetch(
 			`${process.env.NEXT_PUBLIC_API_BASE_URL}/plans/${planId}/exercises`,
 			{

@@ -101,6 +101,16 @@ export default function ExerciseStep({
 		setCurrentValue(0)
 		setRemainingTime(targetValue)
 	}
+	const fullVideoUrl = exercise.videoUrl
+		? exercise.videoUrl.startsWith('https')
+			? exercise.videoUrl
+			: `${process.env.NEXT_PUBLIC_API_BASE_URL}${exercise.videoUrl}`
+		: ''
+
+	const isYouTubeUrl = fullVideoUrl.includes('youtube.com/watch?v=')
+	const embedUrl = isYouTubeUrl
+		? fullVideoUrl.replace('watch?v=', 'embed/')
+		: fullVideoUrl
 
 	const handleFinish = () => {
 		setIsRunning(false)
@@ -123,9 +133,35 @@ export default function ExerciseStep({
 			{exercise.description && (
 				<p className='mb-2 text-gray-700'>{exercise.description}</p>
 			)}
-			{exercise.videoUrl && (
-				<div className='mb-4'>
-					<video src={exercise.videoUrl} controls width='100%' />
+			{fullVideoUrl ? (
+				isYouTubeUrl ? (
+					<div className='mb-4'>
+						<iframe
+							src={embedUrl}
+							title={exercise.name}
+							allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+							allowFullScreen
+							width='100%'
+							height='315'
+						></iframe>
+					</div>
+				) : (
+					<div className='mb-4'>
+						<video
+							src={fullVideoUrl}
+							controls
+							width='100%'
+							onError={e =>
+								console.error('Помилка відео:', e, 'URL:', fullVideoUrl)
+							}
+						>
+							Ваш браузер не підтримує відео.
+						</video>
+					</div>
+				)
+			) : (
+				<div className='mb-4 text-red-500'>
+					Відео недоступне (URL: {exercise.videoUrl})
 				</div>
 			)}
 

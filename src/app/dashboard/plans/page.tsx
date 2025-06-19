@@ -256,9 +256,7 @@ export default function PlansPage() {
 										Час почати тренуватися!
 									</h3>
 									<p className='text-muted-foreground leading-relaxed'>
-										У вас ще немає планів тренувань. Створіть свій перший план
-										або скористайтеся допомогою ШІ для персоналізованих
-										рекомендацій.
+										У вас ще немає планів тренувань. Створіть свій перший план.
 									</p>
 								</div>
 
@@ -279,7 +277,7 @@ export default function PlansPage() {
 									>
 										<Link href='/dashboard/plans/generate-plan'>
 											<Wand2 className='w-5 h-5' />
-											Згенерувати план ШІ
+											Згенерувати план
 										</Link>
 									</Button>
 								</div>
@@ -408,7 +406,7 @@ export default function PlansPage() {
 				onClose={() => setShowCreateModal(false)}
 				onPlanCreated={() => {
 					setCurrentPage(1) // Скидаємо на першу сторінку після створення плану
-					window.location.reload() // Оновлюємо сторінку для завантаження нових даних
+					window.location.reload()
 				}}
 			/>
 		</div>

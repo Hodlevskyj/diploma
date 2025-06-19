@@ -159,6 +159,7 @@ export default function PlanRunPage() {
 			</div>
 		)
 	}
+	console.log('Поточна вправа:', currentExercise)
 
 	return (
 		<div className='max-w-xl mx-auto py-8'>
@@ -174,6 +175,7 @@ export default function PlanRunPage() {
 				<ExerciseStep
 					exercise={{
 						...(currentExercise.exercise || {}),
+						videoUrl: currentExercise.exercise.videoUrl,
 						type: currentExercise.type,
 						reps: currentExercise.reps,
 						duration: currentExercise.duration,

@@ -27,15 +27,15 @@ export default function VerifyEmail() {
 
 				if (response.ok) {
 					setStatus('success')
-					setMessage('Email verified successfully!')
+					setMessage('Пошта підтверджено успішно!')
 					setTimeout(() => router.push('/login'), 3000)
 				} else {
 					setStatus('error')
-					setMessage(data.message || 'Verification failed')
+					setMessage(data.message || 'Помилка верифікації')
 				}
 			} catch (error) {
 				setStatus('error')
-				setMessage('Verification failed')
+				setMessage('Помилка верифікації')
 			}
 		}
 
@@ -53,7 +53,7 @@ export default function VerifyEmail() {
 				{status === 'loading' && (
 					<div>
 						<h2 className='text-2xl font-bold text-gray-900'>
-							Verifying your email...
+							Перевірка пошти...
 						</h2>
 					</div>
 				)}
@@ -62,7 +62,7 @@ export default function VerifyEmail() {
 					<div>
 						<h2 className='text-2xl font-bold text-green-600'>{message}</h2>
 						<p className='mt-2 text-gray-600'>
-							Redirecting to login page in a few seconds...
+							Перенаправлення на сторінку логіну...
 						</p>
 					</div>
 				)}
@@ -74,7 +74,7 @@ export default function VerifyEmail() {
 							onClick={() => router.push('/login')}
 							className='mt-4 text-indigo-600 hover:text-indigo-500'
 						>
-							Go to login
+							Перейти на логін
 						</button>
 					</div>
 				)}
