@@ -152,17 +152,17 @@ export class AuthService {
     // HTML шаблон листа
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2>Welcome to Our App!</h2>
-        <p>Hello ${name},</p>
-        <p>Thank you for registering. Please verify your email by clicking the button below:</p>
+        <h2>Вітаю на нашій платформі!</h2>
+        <p>Привіт ${name},</p>
+        <p>Дякуємо за реєстрацію. Будь ласка, підтвердьте свою електронну адресу, натиснувши кнопку нижче:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${verificationUrl}" 
              style="background-color: #4F46E5; color: white; padding: 12px 24px; 
                     text-decoration: none; border-radius: 5px;">
-            Verify Email
+            Підтвердити електронну адресу
           </a>
         </div>
-        <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+        <p>Якщо кнопка не працює, ви можете скопіювати та вставити це посилання у свій браузер:</p>
         <p>${verificationUrl}</p>
       </div>
     `;
@@ -170,7 +170,8 @@ export class AuthService {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Welcome to Our App - Verify Your Email',
+      subject:
+        'Ласкаво просимо до нашого платформи - Підтвердьте свою електронну пошту',
       html: htmlContent,
     };
 
@@ -178,10 +179,10 @@ export class AuthService {
       await this.transporter.sendMail(mailOptions);
       return {
         message:
-          'Registration successful. Please check your email to verify your account.',
+          'Реєстрація успішна! Будь ласка перевірте власну пошту для підтвердження її.',
       };
     } catch (error) {
-      throw new Error('Failed to send verification email');
+      throw new Error('Помилка в надсиланні листа.');
     }
   }
 

@@ -157,23 +157,20 @@ export class PlanExerciseService {
     });
   }
   async getPlanExercises(planId: number, userId: number) {
-    // Перевіряємо, чи існує план і чи належить він користувачу
     const plan = await this.findOne(planId, userId);
     if (!plan) throw new NotFoundException('Workout plan not found');
 
-    // Отримуємо всі вправи для цього плану
     const exercises = await this.prisma.workoutPlanExercise.findMany({
-      where: {
-        workoutPlanId: planId,
-      },
+      where: { workoutPlanId: planId },
       include: {
-        exercise: true,
+        exercise: {
+          select: { id: true, name: true, videoUrl: true }, // Явно вказуємо поля
+        },
       },
-      orderBy: {
-        order: 'asc',
-      },
+      orderBy: { order: 'asc' },
     });
 
+    console.log('Повернуті вправи:', exercises);
     return exercises;
   }
   async removeExerciseFromPlan(
